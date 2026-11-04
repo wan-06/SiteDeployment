@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SiteDeploy — Field Deployment Map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================
+           CSS RESET & VARIABLES
+           Positivus-inspired: light bg, dark cards, lime accent
+           ============================================ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:          #F3F3F3;
+            --surface:     #FFFFFF;
+            --dark:        #191A23;
+            --dark-card:   #292A32;
+            --lime:        #B9FF66;
+            --lime-hover:  #a8f050;
+            --text:        #191A23;
+            --text-muted:  #6b6d7b;
+            --text-on-dark:#FFFFFF;
+            --border:      #E0E0E0;
+            --red:         #FF6B6B;
+            --orange:      #FFB366;
+            --blue:        #66B2FF;
+            --green:       #66FF99;
+            --radius:      14px;
+            --radius-sm:   8px;
+            --radius-pill: 100px;
+            --shadow:      0 2px 12px rgba(0,0,0,0.06);
+            --shadow-lg:   0 8px 32px rgba(0,0,0,0.10);
+            --font:        'Space Grotesk', system-ui, -apple-system, sans-serif;
+            --transition:  all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        /* ============================================
+           NAVBAR
+           ============================================ */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 40px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.35rem;
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .navbar-brand svg { width: 28px; height: 28px; }
+
+        .navbar-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-link {
+            padding: 8px 16px;
+            border-radius: var(--radius-pill);
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+        .nav-link:hover { background: var(--bg); }
+        .nav-link.active { background: var(--dark); color: var(--text-on-dark); }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            border-radius: var(--radius-pill);
+            border: 2px solid var(--dark);
+            background: transparent;
+            color: var(--text);
+            font-family: var(--font);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+        .btn:hover { background: var(--dark); color: var(--text-on-dark); }
+
+        .btn-lime {
+            background: var(--lime);
+            border-color: var(--lime);
+            color: var(--dark);
+        }
+        .btn-lime:hover { background: var(--lime-hover); border-color: var(--lime-hover); color: var(--dark); }
+
+        .btn-dark {
+            background: var(--dark);
+            border-color: var(--dark);
+            color: var(--text-on-dark);
+        }
+        .btn-dark:hover { background: #2d2e3a; }
+
+        .btn-danger {
+            background: transparent;
+            border-color: var(--red);
+            color: var(--red);
+        }
+        .btn-danger:hover { background: var(--red); color: #fff; }
+
+        .btn-sm { padding: 6px 16px; font-size: 0.82rem; }
+
+        /* ============================================
+           HERO / HEADER SECTION
+           ============================================ */
+        .hero {
+            padding: 48px 40px 32px;
+        }
+
+        .hero h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            line-height: 1.15;
+            margin-bottom: 12px;
+        }
+        .hero h1 .highlight {
+            background: var(--lime);
+            padding: 2px 12px;
+            border-radius: var(--radius-sm);
+        }
+
+        .hero p {
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin-bottom: 24px;
+        }
+
+        /* ============================================
+           STATS CARDS ROW
+           ============================================ */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 0 40px 32px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: var(--transition);
+        }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+
+        .stat-card .stat-label {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .stat-card .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .stat-card .stat-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        /* ============================================
+           SECTION TITLES (Positivus style)
+           ============================================ */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 0 40px 24px;
+            flex-wrap: wrap;
+        }
+
+        .section-title {
+            background: var(--lime);
+            padding: 4px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .section-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            max-width: 500px;
+        }
+
+        /* ============================================
+           MAIN LAYOUT — MAP + SIDE PANEL
+           ============================================ */
+        .app-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 24px;
+            padding: 0 40px 40px;
+            min-height: 60vh;
+        }
+
+        /* ============================================
+           BLUEPRINT MAP CONTAINER
+           ============================================ */
+        .map-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .map-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .map-toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .filter-pills {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .filter-pill {
+            padding: 4px 14px;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border);
+            background: var(--surface);
+            font-family: var(--font);
+            font-size: 0.78rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-muted);
+        }
+        .filter-pill:hover { border-color: var(--dark); color: var(--text); }
+        .filter-pill.active { background: var(--dark); color: var(--text-on-dark); border-color: var(--dark); }
+
+        .blueprint-area {
+            position: relative;
+            width: 100%;
+            min-height: 500px;
+            background: #fafafa;
+            background-image:
+                radial-gradient(circle, #ddd 1px, transparent 1px);
+            background-size: 24px 24px;
+            cursor: crosshair;
+            overflow: hidden;
+        }
+
+        .blueprint-area.has-image {
+            background-image: none;
+            background: #1a1a1a;
+        }
+
+        .blueprint-area img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .upload-prompt {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+        .upload-prompt svg { width: 48px; height: 48px; opacity: 0.4; }
+        .upload-prompt span { font-size: 0.95rem; }
+        .upload-prompt .btn { pointer-events: auto; }
+        .blueprint-area.has-image .upload-prompt { display: none; }
+
+        /* ============================================
+           MAP PINS
+           ============================================ */
+        .pin {
+            position: absolute;
+            transform: translate(-50%, -100%);
+            cursor: pointer;
+            z-index: 10;
+            transition: transform 0.15s ease;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+        .pin:hover { transform: translate(-50%, -100%) scale(1.2); z-index: 20; }
+        .pin.selected { transform: translate(-50%, -100%) scale(1.25); z-index: 30; }
+
+        .pin svg { width: 32px; height: 40px; }
+
+        .pin-label {
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--dark);
+            color: var(--text-on-dark);
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: var(--radius-pill);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        /* Pin colors by status */
+        .pin[data-status="Live"] svg path              { fill: #22c55e; }
+        .pin[data-status="Hardware Mounted"] svg path  { fill: #f59e0b; }
+        .pin[data-status="Cable Pulled"] svg path      { fill: #3b82f6; }
+        .pin[data-status="Planned"] svg path           { fill: #ef4444; }
+        .pin[data-status="Troubleshoot"] svg path      { fill: #a855f7; }
+
+        /* ============================================
+           SIDE PANEL
+           ============================================ */
+        .side-panel {
+            background: var(--dark-card);
+            border-radius: var(--radius);
+            color: var(--text-on-dark);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .panel-header h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .panel-header p {
+            font-size: 0.82rem;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .panel-body {
+            padding: 24px;
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            color: var(--text-on-dark);
+            font-family: var(--font);
+            font-size: 0.9rem;
+            transition: var(--transition);
+            outline: none;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--lime);
+            background: rgba(255,255,255,0.1);
+        }
+
+        .form-group select { cursor: pointer; }
+        .form-group select option { background: var(--dark-card); color: #fff; }
+        .form-group textarea { resize: vertical; min-height: 70px; }
+
+        .coord-display {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .coord-box {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            text-align: center;
+        }
+        .coord-box .coord-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.4);
+            letter-spacing: 0.5px;
+        }
+        .coord-box .coord-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--lime);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .panel-footer {
+            padding: 20px 24px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .panel-footer .btn { width: 100%; justify-content: center; }
+
+        /* ============================================
+           NODE LIST TABLE (bottom section)
+           ============================================ */
+        .table-section {
+            padding: 0 40px 60px;
+        }
+
+        .table-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .table-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-pill);
+            padding: 8px 16px;
+            min-width: 260px;
+        }
+        .search-box svg { width: 16px; height: 16px; opacity: 0.4; }
+        .search-box input {
+            border: none;
+            background: none;
+            outline: none;
+            font-family: var(--font);
+            font-size: 0.88rem;
+            color: var(--text);
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            padding: 12px 20px;
+            text-align: left;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+        }
+
+        tbody td {
+            padding: 14px 20px;
+            font-size: 0.88rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        tbody tr { transition: var(--transition); cursor: pointer; }
+        tbody tr:hover { background: #f7f8fa; }
+        tbody tr:last-child td { border-bottom: none; }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: var(--radius-pill);
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        .status-badge::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+        }
+
+        .status-badge.live { background: #dcfce7; color: #166534; }
+        .status-badge.live::before { background: #22c55e; }
+        .status-badge.hardware-mounted { background: #fef3c7; color: #92400e; }
+        .status-badge.hardware-mounted::before { background: #f59e0b; }
+        .status-badge.cable-pulled { background: #dbeafe; color: #1e40af; }
+        .status-badge.cable-pulled::before { background: #3b82f6; }
+        .status-badge.planned { background: #fee2e2; color: #991b1b; }
+        .status-badge.planned::before { background: #ef4444; }
+        .status-badge.troubleshoot { background: #f3e8ff; color: #6b21a8; }
+        .status-badge.troubleshoot::before { background: #a855f7; }
+
+        .ip-mono {
+            font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+            font-size: 0.82rem;
+            background: var(--bg);
+            padding: 3px 10px;
+            border-radius: var(--radius-sm);
+            color: var(--text);
+        }
+
+        /* ============================================
+           TOAST NOTIFICATIONS
+           ============================================ */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            background: var(--dark);
+            color: var(--text-on-dark);
+            padding: 14px 24px;
+            border-radius: var(--radius);
+            font-size: 0.88rem;
+            font-weight: 500;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
+            max-width: 360px;
+        }
+        .toast.success { border-left: 4px solid var(--lime); }
+        .toast.error   { border-left: 4px solid var(--red); }
+        .toast.info    { border-left: 4px solid var(--blue); }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes toastOut {
+            from { opacity: 1; }
+            to   { opacity: 0; transform: translateY(-8px); }
+        }
+
+        /* ============================================
+           EMPTY STATE
+           ============================================ */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        .empty-state svg { width: 48px; height: 48px; opacity: 0.3; margin-bottom: 12px; }
+        .empty-state p { font-size: 0.92rem; }
+
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        @media (max-width: 900px) {
+            .app-layout {
+                grid-template-columns: 1fr;
+            }
+            .hero h1 { font-size: 2rem; }
+            .navbar { padding: 12px 20px; }
+            .hero, .stats-row, .section-header, .app-layout, .table-section {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+        }
+
+        /* ============================================
+           SCROLLBAR
+           ============================================ */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+        .side-panel ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
+    </style>
+</head>
+<body>
+
+    <!-- ===================== NAVBAR ===================== -->
+    <nav class="navbar">
+        <a class="navbar-brand" href="#">
+            <svg viewBox="0 0 28 28" fill="none">
+                <rect width="28" height="28" rx="6" fill="#191A23"/>
+                <path d="M7 14h14M14 7v14M9 9l10 10M19 9L9 19" stroke="#B9FF66" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            SiteDeploy
+        </a>
+        <div class="navbar-links">
+            <a class="nav-link active" href="#">Map</a>
+            <a class="nav-link" href="#node-list">Node List</a>
+            <button class="btn btn-lime btn-sm" onclick="document.getElementById('blueprintUpload').click()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload Blueprint
+            </button>
+            <input type="file" id="blueprintUpload" accept="image/*" hidden>
+        </div>
+    </nav>
+
+    <!-- ===================== HERO ===================== -->
+    <section class="hero">
+        <h1>Navigating your<br><span class="highlight">site deployment</span></h1>
+        <p>Drop hardware pins on your floorplan, track installation phases from cable pull to live, and keep your field team synced with a single interactive map.</p>
+    </section>
+
+    <!-- ===================== STATS ROW ===================== -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <span class="stat-label">Total Nodes</span>
+            <span class="stat-value" id="statTotal">0</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label"><span class="stat-dot" style="background:#22c55e"></span>Live</span>
+            <span class="stat-value" id="statLive">0</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label"><span class="stat-dot" style="background:#f59e0b"></span>Hardware Mounted</span>
+            <span class="stat-value" id="statMounted">0</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label"><span class="stat-dot" style="background:#3b82f6"></span>Cable Pulled</span>
+            <span class="stat-value" id="statCable">0</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label"><span class="stat-dot" style="background:#ef4444"></span>Planned</span>
+            <span class="stat-value" id="statPlanned">0</span>
+        </div>
+    </div>
+
+    <!-- ===================== SECTION HEADER ===================== -->
+    <div class="section-header">
+        <span class="section-title">Deployment Map</span>
+        <span class="section-desc">Click anywhere on the blueprint to drop a new pin. Click an existing pin to edit it.</span>
+    </div>
+
+    <!-- ===================== APP LAYOUT ===================== -->
+    <div class="app-layout">
+
+        <!-- LEFT: BLUEPRINT MAP -->
+        <div class="map-container">
+            <div class="map-toolbar">
+                <div class="map-toolbar-left">
+                    <span style="font-weight:600; font-size:0.9rem;">Floorplan</span>
+                    <div class="filter-pills">
+                        <button class="filter-pill active" data-filter="all">All</button>
+                        <button class="filter-pill" data-filter="Live">Live</button>
+                        <button class="filter-pill" data-filter="Hardware Mounted">Mounted</button>
+                        <button class="filter-pill" data-filter="Cable Pulled">Cable</button>
+                        <button class="filter-pill" data-filter="Planned">Planned</button>
+                    </div>
+                </div>
+                <span style="font-size:0.78rem; color:var(--text-muted);" id="pinCount">0 pins</span>
+            </div>
+            <div class="blueprint-area" id="blueprintArea">
+                <div class="upload-prompt" id="uploadPrompt">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="3"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <path d="M21 15l-5-5L5 21"/>
+                    </svg>
+                    <span>Upload a floorplan image to get started</span>
+                    <span style="font-size:0.78rem; opacity:0.6;">— or click anywhere on the grid to place pins —</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: SIDE PANEL -->
+        <div class="side-panel">
+            <div class="panel-header">
+                <h3 id="panelTitle">Node Inspector</h3>
+                <p id="panelSubtitle">Click the map to drop a pin or select an existing node</p>
+            </div>
+            <div class="panel-body">
+                <div class="coord-display">
+                    <div class="coord-box">
+                        <div class="coord-label">X Position</div>
+                        <div class="coord-value" id="coordX">—</div>
+                    </div>
+                    <div class="coord-box">
+                        <div class="coord-label">Y Position</div>
+                        <div class="coord-value" id="coordY">—</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Device ID</label>
+                    <input type="text" id="inputDeviceId" placeholder="e.g. CAM-01">
+                </div>
+
+                <div class="form-group">
+                    <label>Type</label>
+                    <select id="inputType">
+                        <option value="Hikvision Dome">Hikvision Dome</option>
+                        <option value="Hikvision Bullet">Hikvision Bullet</option>
+                        <option value="Dahua PTZ">Dahua PTZ</option>
+                        <option value="Dahua Dome">Dahua Dome</option>
+                        <option value="NVR Rack">NVR Rack</option>
+                        <option value="Access Point">Access Point</option>
+                        <option value="Access Door">Access Door</option>
+                        <option value="Switch">Switch</option>
+                        <option value="Sensor">Sensor</option>
+                        <option value="Generic">Generic</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>IP Address</label>
+                    <input type="text" id="inputIp" placeholder="e.g. 192.168.1.100">
+                </div>
+
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="inputStatus">
+                        <option value="Planned">🔴 Planned</option>
+                        <option value="Cable Pulled">🔵 Cable Pulled</option>
+                        <option value="Hardware Mounted">🟡 Hardware Mounted</option>
+                        <option value="Live">🟢 Live</option>
+                        <option value="Troubleshoot">🟣 Troubleshoot</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="inputNotes" placeholder="Quick field notes..."></textarea>
+                </div>
+            </div>
+
+            <div class="panel-footer">
+                <button class="btn btn-lime" id="btnSave" onclick="saveNode()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Save to Database
+                </button>
+                <button class="btn btn-danger btn-sm" id="btnDelete" onclick="deleteNode()" style="display:none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                    Delete Node
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== NODE LIST TABLE ===================== -->
+    <div class="table-section" id="node-list">
+        <div class="section-header" style="padding-left:0; padding-right:0;">
+            <span class="section-title">All Nodes</span>
+            <span class="section-desc">Full inventory of deployed and planned hardware</span>
+        </div>
+        <div class="table-container">
+            <div class="table-toolbar">
+                <div class="search-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="searchInput" placeholder="Search nodes by ID, type, or IP...">
+                </div>
+                <span style="font-size:0.82rem; color:var(--text-muted);" id="tableCount">0 nodes</span>
+            </div>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Device ID</th>
+                            <th>Type</th>
+                            <th>IP Address</th>
+                            <th>Status</th>
+                            <th>Position</th>
+                            <th>Notes</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody id="nodeTableBody">
+                        <tr><td colspan="7">
+                            <div class="empty-state"><p>Loading nodes...</p></div>
+                        </td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== TOAST CONTAINER ===================== -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ===================== JAVASCRIPT ===================== -->
+    <script>
+        // ===================== STATE =====================
+        let nodes = [];
+        let selectedPin = null;      // currently selected pin DOM element
+        let currentPosX = null;
+        let currentPosY = null;
+        let activeFilter = 'all';
+        let isNewPin = false;        // are we creating a new pin?
+        let blueprintImage = null;
+
+        // ===================== PIN SVG TEMPLATE =====================
+        const PIN_SVG = `<svg viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 0C7.2 0 0 7.2 0 16c0 12 16 24 16 24s16-12 16-24C32 7.2 24.8 0 16 0z" fill="#ef4444"/>
+            <circle cx="16" cy="15" r="7" fill="white" opacity="0.9"/>
+            <circle cx="16" cy="15" r="3" fill="#ef4444"/>
+        </svg>`;
+
+        // ===================== INIT =====================
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchNodes();
+            setupBlueprintClick();
+            setupBlueprintUpload();
+            setupFilters();
+            setupSearch();
+        });
+
+        // ===================== FETCH ALL NODES =====================
+        async function fetchNodes() {
+            try {
+                const res = await fetch('api/get_nodes.php');
+                const json = await res.json();
+                if (json.success) {
+                    nodes = json.data;
+                    renderPins();
+                    renderTable();
+                    updateStats();
+                }
+            } catch (err) {
+                showToast('Failed to load nodes: ' + err.message, 'error');
+            }
+        }
+
+        // ===================== RENDER PINS ON MAP =====================
+        function renderPins() {
+            // Remove existing pins
+            document.querySelectorAll('.pin').forEach(p => p.remove());
+
+            const area = document.getElementById('blueprintArea');
+
+            nodes.forEach(node => {
+                if (activeFilter !== 'all' && node.status !== activeFilter) return;
+
+                const pin = document.createElement('div');
+                pin.className = 'pin';
+                pin.innerHTML = PIN_SVG + `<span class="pin-label">${escHtml(node.device_id)}</span>`;
+                pin.style.left = node.pos_x + '%';
+                pin.style.top  = node.pos_y + '%';
+                pin.dataset.deviceId  = node.device_id;
+                pin.dataset.type      = node.type;
+                pin.dataset.ip        = node.ip_address;
+                pin.dataset.status    = node.status;
+                pin.dataset.notes     = node.notes || '';
+                pin.dataset.posX      = node.pos_x;
+                pin.dataset.posY      = node.pos_y;
+                pin.setAttribute('data-status', node.status);
+
+                pin.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectPin(pin);
+                });
+
+                area.appendChild(pin);
+            });
+
+            const visibleCount = document.querySelectorAll('.pin').length;
+            document.getElementById('pinCount').textContent = visibleCount + ' pin' + (visibleCount !== 1 ? 's' : '');
+        }
+
+        // ===================== SELECT A PIN =====================
+        function selectPin(pin) {
+            // Deselect previous
+            document.querySelectorAll('.pin.selected').forEach(p => p.classList.remove('selected'));
+
+            pin.classList.add('selected');
+            selectedPin = pin;
+            isNewPin = false;
+
+            // Populate side panel
+            document.getElementById('coordX').textContent = parseFloat(pin.dataset.posX).toFixed(1) + '%';
+            document.getElementById('coordY').textContent = parseFloat(pin.dataset.posY).toFixed(1) + '%';
+            document.getElementById('inputDeviceId').value = pin.dataset.deviceId;
+            document.getElementById('inputType').value     = pin.dataset.type;
+            document.getElementById('inputIp').value       = pin.dataset.ip;
+            document.getElementById('inputStatus').value   = pin.dataset.status;
+            document.getElementById('inputNotes').value    = pin.dataset.notes;
+
+            currentPosX = parseFloat(pin.dataset.posX);
+            currentPosY = parseFloat(pin.dataset.posY);
+
+            document.getElementById('panelTitle').textContent = pin.dataset.deviceId;
+            document.getElementById('panelSubtitle').textContent = 'Editing existing node';
+            document.getElementById('inputDeviceId').disabled = true;  // can't rename existing
+            document.getElementById('btnDelete').style.display = '';
+            document.getElementById('btnSave').innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Update Node`;
+        }
+
+        // ===================== CLICK BLUEPRINT TO ADD PIN =====================
+        function setupBlueprintClick() {
+            const area = document.getElementById('blueprintArea');
+
+            area.addEventListener('click', (e) => {
+                const rect = area.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width * 100);
+                const y = ((e.clientY - rect.top)  / rect.height * 100);
+
+                currentPosX = parseFloat(x.toFixed(4));
+                currentPosY = parseFloat(y.toFixed(4));
+
+                // Create a temporary pin
+                document.querySelectorAll('.pin.selected').forEach(p => p.classList.remove('selected'));
+                document.querySelectorAll('.pin.temp-pin').forEach(p => p.remove());
+
+                const pin = document.createElement('div');
+                pin.className = 'pin selected temp-pin';
+                pin.innerHTML = PIN_SVG + `<span class="pin-label">NEW</span>`;
+                pin.style.left = x + '%';
+                pin.style.top  = y + '%';
+                pin.setAttribute('data-status', 'Planned');
+                area.appendChild(pin);
+
+                selectedPin = pin;
+                isNewPin = true;
+
+                // Reset side panel for new node
+                document.getElementById('coordX').textContent = x.toFixed(1) + '%';
+                document.getElementById('coordY').textContent = y.toFixed(1) + '%';
+                document.getElementById('inputDeviceId').value = '';
+                document.getElementById('inputDeviceId').disabled = false;
+                document.getElementById('inputType').value     = 'Generic';
+                document.getElementById('inputIp').value       = '';
+                document.getElementById('inputStatus').value   = 'Planned';
+                document.getElementById('inputNotes').value    = '';
+
+                document.getElementById('panelTitle').textContent = 'New Node';
+                document.getElementById('panelSubtitle').textContent = 'Fill in the details and save';
+                document.getElementById('btnDelete').style.display = 'none';
+                document.getElementById('btnSave').innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                    Save New Node`;
+
+                document.getElementById('inputDeviceId').focus();
+            });
+        }
+
+        // ===================== SAVE / UPDATE NODE =====================
+        async function saveNode() {
+            const deviceId = document.getElementById('inputDeviceId').value.trim();
+            if (!deviceId) {
+                showToast('Device ID is required', 'error');
+                document.getElementById('inputDeviceId').focus();
+                return;
+            }
+
+            const payload = {
+                device_id:  deviceId,
+                type:       document.getElementById('inputType').value,
+                ip_address: document.getElementById('inputIp').value.trim(),
+                pos_x:      currentPosX,
+                pos_y:      currentPosY,
+                status:     document.getElementById('inputStatus').value,
+                notes:      document.getElementById('inputNotes').value.trim(),
+            };
+
+            try {
+                const res = await fetch('api/save_node.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                const json = await res.json();
+
+                if (json.success) {
+                    showToast(json.message, 'success');
+                    // Refresh everything
+                    await fetchNodes();
+                    resetPanel();
+                } else {
+                    showToast(json.error || 'Save failed', 'error');
+                }
+            } catch (err) {
+                showToast('Network error: ' + err.message, 'error');
+            }
+        }
+
+        // ===================== DELETE NODE =====================
+        async function deleteNode() {
+            const deviceId = document.getElementById('inputDeviceId').value.trim();
+            if (!deviceId) return;
+
+            if (!confirm(`Delete node "${deviceId}"? This cannot be undone.`)) return;
+
+            try {
+                const res = await fetch('api/delete_node.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device_id: deviceId }),
+                });
+                const json = await res.json();
+
+                if (json.success) {
+                    showToast(json.message, 'success');
+                    await fetchNodes();
+                    resetPanel();
+                } else {
+                    showToast(json.error || 'Delete failed', 'error');
+                }
+            } catch (err) {
+                showToast('Network error: ' + err.message, 'error');
+            }
+        }
+
+        // ===================== RESET PANEL =====================
+        function resetPanel() {
+            selectedPin = null;
+            isNewPin = false;
+            currentPosX = null;
+            currentPosY = null;
+            document.querySelectorAll('.pin.selected').forEach(p => p.classList.remove('selected'));
+            document.querySelectorAll('.pin.temp-pin').forEach(p => p.remove());
+
+            document.getElementById('coordX').textContent = '—';
+            document.getElementById('coordY').textContent = '—';
+            document.getElementById('inputDeviceId').value = '';
+            document.getElementById('inputDeviceId').disabled = false;
+            document.getElementById('inputType').value = 'Generic';
+            document.getElementById('inputIp').value = '';
+            document.getElementById('inputStatus').value = 'Planned';
+            document.getElementById('inputNotes').value = '';
+            document.getElementById('panelTitle').textContent = 'Node Inspector';
+            document.getElementById('panelSubtitle').textContent = 'Click the map to drop a pin or select an existing node';
+            document.getElementById('btnDelete').style.display = 'none';
+            document.getElementById('btnSave').innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Save to Database`;
+        }
+
+        // ===================== RENDER TABLE =====================
+        function renderTable() {
+            const tbody = document.getElementById('nodeTableBody');
+            const query = document.getElementById('searchInput').value.toLowerCase();
+
+            let filtered = nodes;
+            if (query) {
+                filtered = nodes.filter(n =>
+                    n.device_id.toLowerCase().includes(query) ||
+                    n.type.toLowerCase().includes(query) ||
+                    n.ip_address.toLowerCase().includes(query) ||
+                    (n.notes && n.notes.toLowerCase().includes(query))
+                );
+            }
+
+            document.getElementById('tableCount').textContent = filtered.length + ' node' + (filtered.length !== 1 ? 's' : '');
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><p>No nodes found</p></div></td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(n => `
+                <tr onclick="scrollToPin('${escAttr(n.device_id)}')">
+                    <td><strong>${escHtml(n.device_id)}</strong></td>
+                    <td>${escHtml(n.type)}</td>
+                    <td><span class="ip-mono">${escHtml(n.ip_address || '—')}</span></td>
+                    <td><span class="status-badge ${statusClass(n.status)}">${escHtml(n.status)}</span></td>
+                    <td style="font-size:0.78rem; color:var(--text-muted);">${parseFloat(n.pos_x).toFixed(1)}%, ${parseFloat(n.pos_y).toFixed(1)}%</td>
+                    <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escHtml(n.notes || '—')}</td>
+                    <td style="font-size:0.78rem; color:var(--text-muted);">${formatDate(n.created_at)}</td>
+                </tr>
+            `).join('');
+        }
+
+        // ===================== CLICK TABLE ROW → SCROLL TO PIN =====================
+        function scrollToPin(deviceId) {
+            const pin = document.querySelector(`.pin[data-device-id="${deviceId}"]`);
+            if (pin) {
+                pin.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                selectPin(pin);
+            }
+        }
+
+        // ===================== STATS =====================
+        function updateStats() {
+            document.getElementById('statTotal').textContent   = nodes.length;
+            document.getElementById('statLive').textContent     = nodes.filter(n => n.status === 'Live').length;
+            document.getElementById('statMounted').textContent  = nodes.filter(n => n.status === 'Hardware Mounted').length;
+            document.getElementById('statCable').textContent    = nodes.filter(n => n.status === 'Cable Pulled').length;
+            document.getElementById('statPlanned').textContent  = nodes.filter(n => n.status === 'Planned').length;
+        }
+
+        // ===================== FILTER PILLS =====================
+        function setupFilters() {
+            document.querySelectorAll('.filter-pill').forEach(pill => {
+                pill.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+                    pill.classList.add('active');
+                    activeFilter = pill.dataset.filter;
+                    renderPins();
+                });
+            });
+        }
+
+        // ===================== SEARCH =====================
+        function setupSearch() {
+            document.getElementById('searchInput').addEventListener('input', () => {
+                renderTable();
+            });
+        }
+
+        // ===================== BLUEPRINT UPLOAD =====================
+        function setupBlueprintUpload() {
+            const input = document.getElementById('blueprintUpload');
+            const area  = document.getElementById('blueprintArea');
+
+            input.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    // Store and render
+                    blueprintImage = ev.target.result;
+                    localStorage.setItem('sitedeployBlueprint', blueprintImage);
+                    renderBlueprint();
+                    showToast('Blueprint loaded!', 'success');
+                };
+                reader.readAsDataURL(file);
+            });
+
+            // Restore from localStorage
+            const saved = localStorage.getItem('sitedeployBlueprint');
+            if (saved) {
+                blueprintImage = saved;
+                renderBlueprint();
+            }
+        }
+
+        function renderBlueprint() {
+            const area = document.getElementById('blueprintArea');
+            // Remove existing image
+            const existing = area.querySelector('img');
+            if (existing) existing.remove();
+
+            if (blueprintImage) {
+                const img = document.createElement('img');
+                img.src = blueprintImage;
+                img.alt = 'Blueprint';
+                area.insertBefore(img, area.firstChild);
+                area.classList.add('has-image');
+            } else {
+                area.classList.remove('has-image');
+            }
+        }
+
+        // ===================== TOAST =====================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icons = {
+                success: '✓',
+                error: '✕',
+                info: 'ℹ',
+            };
+            toast.innerHTML = `<span style="font-size:1.1rem;">${icons[type] || 'ℹ'}</span> ${escHtml(message)}`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3200);
+        }
+
+        // ===================== HELPERS =====================
+        function escHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        }
+
+        function escAttr(str) {
+            return (str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function statusClass(status) {
+            return (status || '').toLowerCase().replace(/\s+/g, '-');
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '—';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+    </script>
+</body>
+</html>
+
