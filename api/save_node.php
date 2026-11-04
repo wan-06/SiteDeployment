@@ -33,12 +33,19 @@ if (!hasAccessToBlueprint($pdo, $blueprintId, $user['id'], $user['role'])) {
     exit;
 }
 
-$type       = trim($data['type'] ?? 'Generic');
-$ip_address = trim($data['ip_address'] ?? '');
-$pos_x      = floatval($data['pos_x'] ?? 0);
-$pos_y      = floatval($data['pos_y'] ?? 0);
-$status     = trim($data['status'] ?? 'Planned');
-$notes      = trim($data['notes'] ?? '');
+$type            = trim($data['type'] ?? 'Generic');
+$serial_number   = trim($data['serial_number'] ?? '');
+$ip_address      = trim($data['ip_address'] ?? '');
+$mac_address     = trim($data['mac_address'] ?? '');
+$switch_id       = trim($data['switch_id'] ?? '');
+$port_no         = trim($data['port_no'] ?? '');
+$cable_label     = trim($data['cable_label'] ?? '');
+$pos_x           = floatval($data['pos_x'] ?? 0);
+$pos_y           = floatval($data['pos_y'] ?? 0);
+$status          = trim($data['status'] ?? 'Planned');
+$notes           = trim($data['notes'] ?? '');
+$tested_by       = trim($data['tested_by'] ?? '');
+$commission_date = !empty($data['commission_date']) ? trim($data['commission_date']) : null;
 
 try {
     $check = $pdo->prepare("SELECT id FROM nodes WHERE blueprint_id = ? AND device_id = ?");
@@ -46,17 +53,33 @@ try {
 
     if ($check->rowCount() > 0) {
         $update = $pdo->prepare("
-            UPDATE nodes SET type = ?, ip_address = ?, pos_x = ?, pos_y = ?, status = ?, notes = ?
+            UPDATE nodes SET 
+                type = ?, serial_number = ?, ip_address = ?, mac_address = ?, 
+                switch_id = ?, port_no = ?, cable_label = ?, pos_x = ?, pos_y = ?, 
+                status = ?, notes = ?, tested_by = ?, commission_date = ?
             WHERE blueprint_id = ? AND device_id = ?
         ");
-        $update->execute([$type, $ip_address, $pos_x, $pos_y, $status, $notes, $blueprintId, $deviceId]);
+        $update->execute([
+            $type, $serial_number, $ip_address, $mac_address,
+            $switch_id, $port_no, $cable_label, $pos_x, $pos_y,
+            $status, $notes, $tested_by, $commission_date,
+            $blueprintId, $deviceId
+        ]);
         echo json_encode(['success' => true, 'action' => 'updated', 'message' => "Node '{$deviceId}' updated"]);
     } else {
         $insert = $pdo->prepare("
-            INSERT INTO nodes (blueprint_id, device_id, type, ip_address, pos_x, pos_y, status, notes, created_by)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO nodes (
+                blueprint_id, device_id, type, serial_number, ip_address, mac_address, 
+                switch_id, port_no, cable_label, pos_x, pos_y, status, notes, 
+                tested_by, commission_date, created_by
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $insert->execute([$blueprintId, $deviceId, $type, $ip_address, $pos_x, $pos_y, $status, $notes, $user['id']]);
+        $insert->execute([
+            $blueprintId, $deviceId, $type, $serial_number, $ip_address, $mac_address,
+            $switch_id, $port_no, $cable_label, $pos_x, $pos_y, $status, $notes,
+            $tested_by, $commission_date, $user['id']
+        ]);
         echo json_encode(['success' => true, 'action' => 'created', 'message' => "Node '{$deviceId}' created", 'id' => $pdo->lastInsertId()]);
     }
 } catch (PDOException $e) {

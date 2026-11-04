@@ -27,6 +27,21 @@ try {
             $sql = file_get_contents($schemaFile);
             $pdo->exec($sql);
         }
+    } else {
+        // Auto-migration: ensure T&C commissioning columns exist in nodes table
+        $colCheck = $pdo->query("SHOW COLUMNS FROM nodes LIKE 'serial_number'")->fetch();
+        if (!$colCheck) {
+            $pdo->exec("
+                ALTER TABLE nodes
+                ADD COLUMN `serial_number`   VARCHAR(100) NULL AFTER `type`,
+                ADD COLUMN `mac_address`     VARCHAR(30)  NULL AFTER `ip_address`,
+                ADD COLUMN `switch_id`       VARCHAR(50)  NULL AFTER `mac_address`,
+                ADD COLUMN `port_no`         VARCHAR(20)  NULL AFTER `switch_id`,
+                ADD COLUMN `cable_label`     VARCHAR(50)  NULL AFTER `port_no`,
+                ADD COLUMN `tested_by`       VARCHAR(100) NULL AFTER `notes`,
+                ADD COLUMN `commission_date` DATE         NULL AFTER `tested_by`
+            ");
+        }
     }
 } catch (PDOException $e) {
     // If database doesn't exist, try connecting to MySQL server to create it automatically

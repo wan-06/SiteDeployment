@@ -59,20 +59,28 @@ CREATE TABLE `blueprint_access` (
 
 -- =============================================
 -- NODES (pins on a specific blueprint)
+-- Includes ELV Testing & Commissioning (T&C) Equipment Schedule
 -- =============================================
 CREATE TABLE `nodes` (
-  `id`           INT AUTO_INCREMENT PRIMARY KEY,
-  `blueprint_id` INT NOT NULL,
-  `device_id`    VARCHAR(100) NOT NULL,
-  `type`         VARCHAR(100) NOT NULL DEFAULT 'Generic',
-  `ip_address`   VARCHAR(45)  NOT NULL DEFAULT '',
-  `pos_x`        DECIMAL(8,4) NOT NULL DEFAULT 0,
-  `pos_y`        DECIMAL(8,4) NOT NULL DEFAULT 0,
-  `status`       VARCHAR(50)  NOT NULL DEFAULT 'Planned',
-  `notes`        TEXT,
-  `created_by`   INT DEFAULT NULL,
-  `created_at`   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at`   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `id`              INT AUTO_INCREMENT PRIMARY KEY,
+  `blueprint_id`    INT NOT NULL,
+  `device_id`       VARCHAR(100) NOT NULL,
+  `type`            VARCHAR(100) NOT NULL DEFAULT 'Generic',
+  `serial_number`   VARCHAR(100) NULL,
+  `ip_address`      VARCHAR(45)  NOT NULL DEFAULT '',
+  `mac_address`     VARCHAR(30)  NULL,
+  `switch_id`       VARCHAR(50)  NULL,
+  `port_no`         VARCHAR(20)  NULL,
+  `cable_label`     VARCHAR(50)  NULL,
+  `pos_x`           DECIMAL(8,4) NOT NULL DEFAULT 0,
+  `pos_y`           DECIMAL(8,4) NOT NULL DEFAULT 0,
+  `status`          VARCHAR(50)  NOT NULL DEFAULT 'Planned',
+  `notes`           TEXT,
+  `tested_by`       VARCHAR(100) NULL,
+  `commission_date` DATE         NULL,
+  `created_by`      INT DEFAULT NULL,
+  `created_at`      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (`blueprint_id`) REFERENCES `blueprints`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`created_by`)   REFERENCES `users`(`id`)      ON DELETE SET NULL,
   UNIQUE KEY `unique_device_per_blueprint` (`blueprint_id`, `device_id`)
@@ -100,12 +108,14 @@ INSERT INTO `blueprint_access` (`blueprint_id`, `user_id`, `granted_by`) VALUES
   (1, 2, 1);
 
 -- =============================================
--- SEED HARDWARE NODES ON BLUEPRINT 1
+-- SEED HARDWARE NODES ON BLUEPRINT 1 (With T&C Commissioning Data)
 -- =============================================
-INSERT INTO `nodes` (`blueprint_id`, `device_id`, `type`, `ip_address`, `pos_x`, `pos_y`, `status`, `notes`, `created_by`) VALUES
-  (1, 'CAM-01',   'Hikvision Dome',   '192.168.1.101', 18.5000, 18.0000, 'Live',             'Main Lobby ceiling mount facing entrance', 1),
-  (1, 'CAM-02',   'Hikvision Bullet', '192.168.1.102', 95.0000, 50.0000, 'Hardware Mounted',  'East emergency exit doorway',              1),
-  (1, 'CAM-03',   'Dahua PTZ',        '192.168.1.103', 50.0000, 22.0000, 'Cable Pulled',      'Conference Suite Alpha high angle',        2),
-  (1, 'NVR-01',   'NVR Rack',         '192.168.1.10',  14.0000, 70.0000, 'Live',             'NOC Server Rack A Unit 4',                 1),
-  (1, 'AP-01',    'Access Point',     '192.168.1.201', 50.0000, 50.0000, 'Live',             'Central corridor ceiling PoE AP',          2),
-  (1, 'DOOR-01',  'Access Door',      '192.168.1.50',  15.0000, 56.0000, 'Troubleshoot',     'Server room card reader offline',          1);
+INSERT INTO `nodes` 
+  (`blueprint_id`, `device_id`, `type`, `serial_number`, `ip_address`, `mac_address`, `switch_id`, `port_no`, `cable_label`, `pos_x`, `pos_y`, `status`, `notes`, `tested_by`, `commission_date`, `created_by`) 
+VALUES
+  (1, 'CAM-01',   'Hikvision Dome',   'DS-2CD2143G2-IS-20230911AAWR', '192.168.1.101', 'BC:54:51:3A:89:1F', 'SW-MDF-01',  'P01 (PoE)',      'C-L2-001', 18.5000, 18.0000, 'Live',             'Main Lobby ceiling mount facing entrance', 'Wan Pidin',      '2026-10-15', 1),
+  (1, 'CAM-02',   'Hikvision Bullet', 'DS-2CD2043G2-I-20230815BBRT',  '192.168.1.102', 'BC:54:51:4B:92:2A', 'SW-MDF-01',  'P02 (PoE)',      'C-L2-002', 95.0000, 50.0000, 'Hardware Mounted',  'East emergency exit doorway',              'Wan Pidin',      '2026-10-16', 1),
+  (1, 'CAM-03',   'Dahua PTZ',        'DH-SD49225XA-HNR-20231102A',   '192.168.1.103', '38:AF:29:12:87:C0', 'SW-IDF-01',  'P08 (Hi-PoE)',   'C-L2-008', 50.0000, 22.0000, 'Cable Pulled',      'Conference Suite Alpha high angle',        'Technician Ali', '2026-10-18', 2),
+  (1, 'NVR-01',   'NVR Rack',         'DS-7732NI-I4-20230510CCXE',    '192.168.1.10',  'BC:54:51:10:00:0A', 'SW-CORE-01', 'G01 (Trunk)',    'FIB-MDF-01',14.0000, 70.0000, 'Live',             'NOC Server Rack A Unit 4',                 'Wan Pidin',      '2026-10-12', 1),
+  (1, 'AP-01',    'Access Point',     'RG-AP820-L-20230718DDWE',      '192.168.1.201', '58:69:6C:44:19:80', 'SW-MDF-01',  'P12 (PoE)',      'C-L2-012', 50.0000, 50.0000, 'Live',             'Central corridor ceiling PoE AP',          'Technician Ali', '2026-10-16', 2),
+  (1, 'DOOR-01',  'Access Door',      'DS-K2604T-20230401MMKL',       '192.168.1.50',  'BC:54:51:88:31:0D', 'SW-MDF-01',  'P16',            'C-SEC-001', 15.0000, 56.0000, 'Troubleshoot',     'Server room card reader offline',          'Wan Pidin',      NULL,         1);

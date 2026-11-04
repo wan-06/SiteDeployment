@@ -430,6 +430,10 @@ $user = getCurrentUser();
                     <div class="bp-card-footer" onclick="event.stopPropagation()">
                         <span class="owner">by ${esc(b.owner_name||b.owner_username)}</span>
                         <div style="display:flex; gap:6px;">
+                            <a href="handover_report.php?id=${b.id}" target="_blank" class="btn btn-sm btn-ghost" title="View & Print As-Built T&C Report" style="background:#f4f4f0; color:var(--dark); font-weight:600;">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                Report
+                            </a>
                             ${IS_ADMIN || b.uploaded_by == CURRENT_USER.id ? `
                                 <button class="btn btn-sm btn-ghost" onclick="openAccessModal(${b.id}, '${escAttr(b.name)}')" title="Manage Access">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>

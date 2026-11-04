@@ -160,6 +160,28 @@ $imageExists = file_exists($imagePath);
 
         .btn-disabled-muted:disabled { opacity:0.4; cursor:not-allowed; background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.1); color:rgba(255,255,255,0.4); }
 
+        /* ── T&C FIELD STYLES ── */
+        .tc-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 12px 0 6px;
+            padding-top: 12px;
+            border-top: 1px dashed rgba(255,255,255,0.15);
+        }
+        .tc-pill {
+            background: rgba(185,255,102,0.18);
+            color: var(--lime);
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .tc-desc { font-size: 0.72rem; color: rgba(255,255,255,0.45); }
+        .tag-mono { font-family:'SF Mono','Cascadia Code','Consolas',monospace; font-size:0.75rem; background:#E5E7EB; color:#111; padding:2px 6px; border-radius:4px; font-weight:700; }
+
         /* ── TABLE ── */
         .table-section { padding:0 40px 60px; }
         .section-header { display:flex; align-items:center; gap:16px; margin-bottom:20px; flex-wrap:wrap; }
@@ -217,6 +239,10 @@ $imageExists = file_exists($imagePath);
             <span class="bp-title"><?= htmlspecialchars($blueprint['name']) ?></span>
         </div>
         <div class="navbar-right">
+            <a href="handover_report.php?id=<?= $blueprintId ?>" target="_blank" class="btn btn-sm btn-lime" title="Generate MEMIS T&C As-Built Handover Report">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                As-Built Report
+            </a>
             <?php if ($blueprint['uploaded_by'] == $user['id'] || $user['role'] === 'admin'): ?>
                 <button class="btn btn-sm btn-danger" onclick="deleteCurrentBlueprint()" title="Delete this blueprint and all its nodes">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
@@ -309,6 +335,23 @@ $imageExists = file_exists($imagePath);
                     </select>
                 </div>
                 <div class="form-group"><label>Notes</label><textarea id="inputNotes" placeholder="Field notes..." disabled></textarea></div>
+
+                <!-- ELV Testing & Commissioning (T&C) Section -->
+                <div class="tc-heading">
+                    <span class="tc-pill">T&amp;C Commissioning</span>
+                    <span class="tc-desc">MEMIS Handover Data</span>
+                </div>
+                <div class="form-group"><label>Serial Number (S/N)</label><input type="text" id="inputSerial" placeholder="e.g. DS-2CD2143G2-..." disabled></div>
+                <div class="form-group"><label>MAC Address</label><input type="text" id="inputMac" placeholder="e.g. BC:54:51:3A:89:1F" disabled></div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                    <div class="form-group"><label>Switch ID</label><input type="text" id="inputSwitch" placeholder="e.g. SW-MDF-01" disabled></div>
+                    <div class="form-group"><label>Port No</label><input type="text" id="inputPort" placeholder="e.g. P01 (PoE)" disabled></div>
+                </div>
+                <div class="form-group"><label>Structured Cable Tag</label><input type="text" id="inputCable" placeholder="e.g. C-L2-014" disabled></div>
+                <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:8px;">
+                    <div class="form-group"><label>Tested By</label><input type="text" id="inputTestedBy" placeholder="Technician name" disabled></div>
+                    <div class="form-group"><label>Commission Date</label><input type="date" id="inputCommissionDate" disabled></div>
+                </div>
                 </div><!-- end #nodeFormFields -->
             </div>
             <div class="panel-footer">
@@ -339,8 +382,21 @@ $imageExists = file_exists($imagePath);
             </div>
             <div style="overflow-x:auto;">
                 <table>
-                    <thead><tr><th>Device ID</th><th>Type</th><th>IP Address</th><th>Status</th><th>Position</th><th>Notes</th><th>By</th></tr></thead>
-                    <tbody id="nodeTableBody"><tr><td colspan="7" style="text-align:center;padding:40px;">Loading...</td></tr></tbody>
+                    <thead>
+                        <tr>
+                            <th>Device Tag</th>
+                            <th>Category</th>
+                            <th>IP / MAC Address</th>
+                            <th>Switch &amp; Port</th>
+                            <th>Cable Tag</th>
+                            <th>Serial Number</th>
+                            <th>Status</th>
+                            <th>Tested By</th>
+                            <th>Date</th>
+                            <th>Position</th>
+                        </tr>
+                    </thead>
+                    <tbody id="nodeTableBody"><tr><td colspan="10" style="text-align:center;padding:40px;">Loading...</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -393,13 +449,20 @@ $imageExists = file_exists($imagePath);
                 pin.innerHTML = PIN_SVG + `<span class="pin-label">${esc(node.device_id)}</span>`;
                 pin.style.left = node.pos_x + '%';
                 pin.style.top  = node.pos_y + '%';
-                pin.dataset.deviceId = node.device_id;
-                pin.dataset.type     = node.type;
-                pin.dataset.ip       = node.ip_address;
-                pin.dataset.status   = node.status;
-                pin.dataset.notes    = node.notes || '';
-                pin.dataset.posX     = node.pos_x;
-                pin.dataset.posY     = node.pos_y;
+                pin.dataset.deviceId       = node.device_id;
+                pin.dataset.type           = node.type;
+                pin.dataset.ip             = node.ip_address || '';
+                pin.dataset.status         = node.status;
+                pin.dataset.notes          = node.notes || '';
+                pin.dataset.serialNumber   = node.serial_number || '';
+                pin.dataset.macAddress     = node.mac_address || '';
+                pin.dataset.switchId       = node.switch_id || '';
+                pin.dataset.portNo         = node.port_no || '';
+                pin.dataset.cableLabel     = node.cable_label || '';
+                pin.dataset.testedBy       = node.tested_by || '';
+                pin.dataset.commissionDate = node.commission_date || '';
+                pin.dataset.posX           = node.pos_x;
+                pin.dataset.posY           = node.pos_y;
                 pin.setAttribute('data-status', node.status);
                 pin.addEventListener('click', (e) => { e.stopPropagation(); selectPin(pin); });
                 stage.appendChild(pin);
@@ -425,6 +488,13 @@ $imageExists = file_exists($imagePath);
             document.getElementById('inputIp').disabled = false;
             document.getElementById('inputStatus').disabled = false;
             document.getElementById('inputNotes').disabled = false;
+            document.getElementById('inputSerial').disabled = false;
+            document.getElementById('inputMac').disabled = false;
+            document.getElementById('inputSwitch').disabled = false;
+            document.getElementById('inputPort').disabled = false;
+            document.getElementById('inputCable').disabled = false;
+            document.getElementById('inputTestedBy').disabled = false;
+            document.getElementById('inputCommissionDate').disabled = false;
 
             const btnSave = document.getElementById('btnSave');
             btnSave.disabled = false;
@@ -446,6 +516,13 @@ $imageExists = file_exists($imagePath);
             document.getElementById('inputIp').disabled = true;
             document.getElementById('inputStatus').disabled = true;
             document.getElementById('inputNotes').disabled = true;
+            document.getElementById('inputSerial').disabled = true;
+            document.getElementById('inputMac').disabled = true;
+            document.getElementById('inputSwitch').disabled = true;
+            document.getElementById('inputPort').disabled = true;
+            document.getElementById('inputCable').disabled = true;
+            document.getElementById('inputTestedBy').disabled = true;
+            document.getElementById('inputCommissionDate').disabled = true;
 
             const btnSave = document.getElementById('btnSave');
             btnSave.disabled = true;
@@ -471,6 +548,13 @@ $imageExists = file_exists($imagePath);
             document.getElementById('inputIp').value       = pin.dataset.ip;
             document.getElementById('inputStatus').value   = pin.dataset.status;
             document.getElementById('inputNotes').value    = pin.dataset.notes;
+            document.getElementById('inputSerial').value   = pin.dataset.serialNumber || '';
+            document.getElementById('inputMac').value      = pin.dataset.macAddress || '';
+            document.getElementById('inputSwitch').value   = pin.dataset.switchId || '';
+            document.getElementById('inputPort').value     = pin.dataset.portNo || '';
+            document.getElementById('inputCable').value    = pin.dataset.cableLabel || '';
+            document.getElementById('inputTestedBy').value = pin.dataset.testedBy || '';
+            document.getElementById('inputCommissionDate').value = pin.dataset.commissionDate || '';
             document.getElementById('panelTitle').textContent = pin.dataset.deviceId;
             document.getElementById('panelSubtitle').textContent = 'Editing existing node';
             document.getElementById('btnDelete').style.display = '';
@@ -512,6 +596,13 @@ $imageExists = file_exists($imagePath);
                 document.getElementById('inputIp').value = '';
                 document.getElementById('inputStatus').value = 'Planned';
                 document.getElementById('inputNotes').value = '';
+                document.getElementById('inputSerial').value = '';
+                document.getElementById('inputMac').value = '';
+                document.getElementById('inputSwitch').value = '';
+                document.getElementById('inputPort').value = '';
+                document.getElementById('inputCable').value = '';
+                document.getElementById('inputTestedBy').value = <?= json_encode($_SESSION['full_name'] ?? $_SESSION['username'] ?? '') ?>;
+                document.getElementById('inputCommissionDate').value = new Date().toISOString().split('T')[0];
                 document.getElementById('panelTitle').textContent = 'New Node';
                 document.getElementById('panelSubtitle').textContent = 'Fill in the details and save';
                 document.getElementById('btnDelete').style.display = 'none';
@@ -539,14 +630,21 @@ $imageExists = file_exists($imagePath);
             }
 
             const payload = {
-                blueprint_id: BLUEPRINT_ID,
-                device_id:  deviceId,
-                type:       document.getElementById('inputType').value,
-                ip_address: document.getElementById('inputIp').value.trim(),
-                pos_x:      currentPosX,
-                pos_y:      currentPosY,
-                status:     document.getElementById('inputStatus').value,
-                notes:      document.getElementById('inputNotes').value.trim(),
+                blueprint_id:    BLUEPRINT_ID,
+                device_id:       deviceId,
+                type:            document.getElementById('inputType').value,
+                ip_address:      document.getElementById('inputIp').value.trim(),
+                pos_x:           currentPosX,
+                pos_y:           currentPosY,
+                status:          document.getElementById('inputStatus').value,
+                notes:           document.getElementById('inputNotes').value.trim(),
+                serial_number:   document.getElementById('inputSerial').value.trim(),
+                mac_address:     document.getElementById('inputMac').value.trim(),
+                switch_id:       document.getElementById('inputSwitch').value.trim(),
+                port_no:         document.getElementById('inputPort').value.trim(),
+                cable_label:     document.getElementById('inputCable').value.trim(),
+                tested_by:       document.getElementById('inputTestedBy').value.trim(),
+                commission_date: document.getElementById('inputCommissionDate').value,
             };
 
             try {
@@ -581,6 +679,13 @@ $imageExists = file_exists($imagePath);
             document.getElementById('inputIp').value = '';
             document.getElementById('inputStatus').value = 'Planned';
             document.getElementById('inputNotes').value = '';
+            document.getElementById('inputSerial').value = '';
+            document.getElementById('inputMac').value = '';
+            document.getElementById('inputSwitch').value = '';
+            document.getElementById('inputPort').value = '';
+            document.getElementById('inputCable').value = '';
+            document.getElementById('inputTestedBy').value = '';
+            document.getElementById('inputCommissionDate').value = '';
             document.getElementById('panelTitle').textContent = 'Node Inspector';
             document.getElementById('panelSubtitle').textContent = 'Click the map to drop a pin';
             document.getElementById('btnDelete').style.display = 'none';
@@ -613,19 +718,38 @@ $imageExists = file_exists($imagePath);
         function renderTable() {
             const q = document.getElementById('searchInput').value.toLowerCase();
             let f = nodes;
-            if (q) f = nodes.filter(n => n.device_id.toLowerCase().includes(q) || n.type.toLowerCase().includes(q) || n.ip_address.toLowerCase().includes(q) || (n.notes||'').toLowerCase().includes(q));
+            if (q) {
+                f = nodes.filter(n =>
+                    (n.device_id || '').toLowerCase().includes(q) ||
+                    (n.type || '').toLowerCase().includes(q) ||
+                    (n.ip_address || '').toLowerCase().includes(q) ||
+                    (n.mac_address || '').toLowerCase().includes(q) ||
+                    (n.serial_number || '').toLowerCase().includes(q) ||
+                    (n.switch_id || '').toLowerCase().includes(q) ||
+                    (n.port_no || '').toLowerCase().includes(q) ||
+                    (n.cable_label || '').toLowerCase().includes(q) ||
+                    (n.tested_by || '').toLowerCase().includes(q) ||
+                    (n.notes || '').toLowerCase().includes(q)
+                );
+            }
             document.getElementById('tableCount').textContent = f.length + ' node' + (f.length!==1?'s':'');
             const tb = document.getElementById('nodeTableBody');
-            if (!f.length) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">No nodes found</td></tr>'; return; }
+            if (!f.length) { tb.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--text-muted);">No commissioning nodes found</td></tr>'; return; }
             tb.innerHTML = f.map(n => `
                 <tr onclick="scrollToPin('${escAttr(n.device_id)}')">
                     <td><strong>${esc(n.device_id)}</strong></td>
                     <td>${esc(n.type)}</td>
-                    <td><span class="ip-mono">${esc(n.ip_address||'—')}</span></td>
+                    <td>
+                        <div class="ip-mono">${esc(n.ip_address||'—')}</div>
+                        ${n.mac_address ? `<div class="tag-mono" style="font-size:0.7rem;color:var(--text-muted);">${esc(n.mac_address)}</div>` : ''}
+                    </td>
+                    <td>${n.switch_id ? `<span class="tag-mono">${esc(n.switch_id)}${n.port_no ? ' : P' + esc(n.port_no) : ''}</span>` : '—'}</td>
+                    <td>${n.cable_label ? `<span class="tag-mono" style="background:#eef2ff;color:#4338ca;">${esc(n.cable_label)}</span>` : '—'}</td>
+                    <td>${n.serial_number ? `<span class="tag-mono">${esc(n.serial_number)}</span>` : '—'}</td>
                     <td><span class="status-badge ${statusClass(n.status)}">${esc(n.status)}</span></td>
+                    <td style="font-size:0.8rem;color:var(--text-muted);">${esc(n.tested_by||'—')}</td>
+                    <td style="font-size:0.8rem;color:var(--text-muted);">${esc(n.commission_date||'—')}</td>
                     <td style="font-size:0.78rem;color:var(--text-muted);">${parseFloat(n.pos_x).toFixed(1)}%, ${parseFloat(n.pos_y).toFixed(1)}%</td>
-                    <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(n.notes||'—')}</td>
-                    <td style="font-size:0.78rem;color:var(--text-muted);">${esc(n.created_by_username||'—')}</td>
                 </tr>
             `).join('');
         }
