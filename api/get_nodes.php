@@ -36,6 +36,35 @@ try {
     $stmt->execute([$blueprintId]);
     $nodes = $stmt->fetchAll();
 
+    // Fetch site verification photos for this blueprint
+    $photoStmt = $pdo->prepare("
+        SELECT id, blueprint_id, device_id, filename, caption, uploaded_by, created_at
+        FROM node_photos
+        WHERE blueprint_id = ?
+        ORDER BY created_at DESC
+    ");
+    $photoStmt->execute([$blueprintId]);
+    $photos = $photoStmt->fetchAll();
+
+    // Group photos by device_id
+    $photosByDevice = [];
+    foreach ($photos as $p) {
+        $devId = $p['device_id'] ?? '';
+        if ($devId !== '') {
+            if (!isset($photosByDevice[$devId])) {
+                $photosByDevice[$devId] = [];
+            }
+            $photosByDevice[$devId][] = $p;
+        }
+    }
+
+    foreach ($nodes as &$node) {
+        $dev = $node['device_id'] ?? '';
+        $node['photos'] = $photosByDevice[$dev] ?? [];
+        $node['photo_count'] = count($node['photos']);
+    }
+    unset($node);
+
     echo json_encode([
         'success' => true,
         'count'   => count($nodes),

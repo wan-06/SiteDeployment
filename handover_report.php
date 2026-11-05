@@ -40,6 +40,23 @@ $nodesStmt = $pdo->prepare("
 $nodesStmt->execute([$blueprintId]);
 $nodes = $nodesStmt->fetchAll();
 
+// Fetch site verification photos for this blueprint
+$photoStmt = $pdo->prepare("
+    SELECT p.*, u.full_name AS uploader_name
+    FROM node_photos p
+    LEFT JOIN users u ON u.id = p.uploaded_by
+    WHERE p.blueprint_id = ?
+    ORDER BY p.device_id ASC, p.created_at ASC
+");
+$photoStmt->execute([$blueprintId]);
+$photos = $photoStmt->fetchAll();
+
+// Map node details for photos
+$nodeMap = [];
+foreach ($nodes as $n) {
+    $nodeMap[$n['device_id']] = $n;
+}
+
 // Statistics
 $totalNodes = count($nodes);
 $liveNodes = count(array_filter($nodes, fn($n) => $n['status'] === 'Live'));
@@ -382,6 +399,100 @@ $imagePath = 'uploads/blueprints/' . htmlspecialchars($blueprint['image_filename
             margin-bottom: 2px;
         }
 
+        /* ── SECTION 3: SITE PHOTO EVIDENCE GALLERY ── */
+        .photo-evidence-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-top: 16px;
+        }
+        @media (max-width: 900px) {
+            .photo-evidence-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .photo-evidence-grid { grid-template-columns: 1fr; }
+        }
+        .photo-evidence-card {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #FAFAFA;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+        .photo-evidence-thumb {
+            position: relative;
+            width: 100%;
+            height: 190px;
+            background: #111827;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .photo-evidence-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .photo-card-stamp {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(185, 255, 102, 0.95);
+            color: #191A23;
+            font-size: 0.62rem;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        .photo-evidence-body {
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+        }
+        .photo-evidence-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .photo-evidence-caption {
+            font-size: 0.8rem;
+            color: var(--text);
+            font-weight: 500;
+            line-height: 1.35;
+            margin-top: 2px;
+        }
+        .photo-evidence-footer {
+            font-size: 0.7rem;
+            color: var(--muted);
+            margin-top: auto;
+            padding-top: 6px;
+            border-top: 1px solid rgba(0,0,0,0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .empty-photos-box {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 36px;
+            text-align: center;
+            color: var(--muted);
+            margin-top: 16px;
+            background: #FAFAFA;
+        }
+
         /* ── PRINT STYLES ── */
         @media print {
             body { background: #fff; padding: 0; }
@@ -398,6 +509,8 @@ $imagePath = 'uploads/blueprints/' . htmlspecialchars($blueprint['image_filename
             table.tc-table th { background: #eee !important; -webkit-print-color-adjust: exact; }
             .status-pill { -webkit-print-color-adjust: exact; }
             .section-pill { -webkit-print-color-adjust: exact; }
+            .photo-evidence-card { break-inside: avoid; page-break-inside: avoid; border: 1px solid #ccc; }
+            .photo-card-stamp { -webkit-print-color-adjust: exact; }
         }
     </style>
 </head>
@@ -463,6 +576,10 @@ $imagePath = 'uploads/blueprints/' . htmlspecialchars($blueprint['image_filename
                 <div class="stat-box">
                     <div class="s-val" style="color:#22c55e;"><?= $liveNodes ?></div>
                     <div class="s-lbl">Live &amp; Tested</div>
+                </div>
+                <div class="stat-box">
+                    <div class="s-val" style="color:#8b5cf6;"><?= count($photos) ?></div>
+                    <div class="s-lbl">Site Photos</div>
                 </div>
                 <div class="stat-box">
                     <div class="s-val" style="color:#f59e0b;"><?= $mountedNodes + $cableNodes + $plannedNodes ?></div>
@@ -611,10 +728,68 @@ $imagePath = 'uploads/blueprints/' . htmlspecialchars($blueprint['image_filename
             </table>
         </div>
 
-        <!-- ── SECTION 3: FORMAL SIGN-OFF BLOCK ── -->
+        <!-- ── SECTION 3: AS-BUILT SITE PHOTO EVIDENCE & INSTALLATION LOG ── -->
+        <div class="section-heading page-break">
+            <span class="section-pill" style="background:#8b5cf6;">Section 3</span>
+            <span class="section-title">As-Built Site Photo Evidence &amp; Visual Verification Log</span>
+        </div>
+
+        <?php if (empty($photos)): ?>
+            <div class="empty-photos-box">
+                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:8px; opacity:0.6;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <div style="font-weight:700; font-size:1rem; color:var(--dark);">No Site Verification Photos Attached</div>
+                <div style="font-size:0.85rem; margin-top:4px;">Technicians can attach on-site visual evidence by tapping "Take Photo" or "Upload File" in the blueprint map node inspector.</div>
+            </div>
+        <?php else: ?>
+            <div class="photo-evidence-grid">
+                <?php foreach ($photos as $photo): 
+                    $pDev = $photo['device_id'];
+                    $matchingNode = $nodeMap[$pDev] ?? null;
+                    $nodeType = $matchingNode['type'] ?? 'ELV Hardware';
+                    $nodeStatus = $matchingNode['status'] ?? 'Verified';
+                    $statusClass = strtolower(str_replace(' ', '-', $nodeStatus));
+                    $photoSrc = 'uploads/nodes/' . htmlspecialchars($photo['filename']);
+                ?>
+                    <div class="photo-evidence-card">
+                        <div class="photo-evidence-thumb">
+                            <img src="<?= $photoSrc ?>" alt="<?= htmlspecialchars($photo['caption'] ?: $pDev) ?>" loading="lazy">
+                            <span class="photo-card-stamp">✓ Live Verified</span>
+                        </div>
+                        <div class="photo-evidence-body">
+                            <div class="photo-evidence-head">
+                                <div>
+                                    <span class="tag-badge" style="font-size:0.82rem; font-weight:700;"><?= htmlspecialchars($pDev) ?></span>
+                                    <span style="font-size:0.75rem; color:var(--muted); margin-left:4px;"><?= htmlspecialchars($nodeType) ?></span>
+                                </div>
+                                <span class="status-pill <?= $statusClass ?>" style="font-size:0.65rem; padding:2px 8px;">
+                                    <?= htmlspecialchars($nodeStatus) ?>
+                                </span>
+                            </div>
+
+                            <?php if (!empty($photo['caption'])): ?>
+                                <div class="photo-evidence-caption">
+                                    <?= htmlspecialchars($photo['caption']) ?>
+                                </div>
+                            <?php else: ?>
+                                <div class="photo-evidence-caption" style="color:var(--muted); font-style:italic;">
+                                    Physical installation verification &amp; conduit tagging
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="photo-evidence-footer">
+                                <span>Tag: <strong class="mono-text"><?= htmlspecialchars($matchingNode['cable_label'] ?: $pDev) ?></strong></span>
+                                <span><?= date('d M Y, H:i', strtotime($photo['created_at'])) ?></span>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+
+        <!-- ── SECTION 4: FORMAL SIGN-OFF BLOCK ── -->
         <div class="signoff-section">
             <div style="margin-bottom:16px;">
-                <span class="section-pill">Section 3</span>
+                <span class="section-pill">Section 4</span>
                 <span class="section-title" style="margin-left:8px;">Handover Verification &amp; Acceptance Sign-off</span>
             </div>
             <div class="signoff-grid">

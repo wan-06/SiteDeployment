@@ -54,6 +54,35 @@ try {
                 ADD COLUMN `fov_distance`  INT          NOT NULL DEFAULT 15 AFTER `fov_direction`
             ");
         }
+
+        // Auto-migration: ensure node_photos table exists for Mobile Site Photo Attachments
+        $photoTableCheck = $pdo->query("SHOW TABLES LIKE 'node_photos'")->fetch();
+        if (!$photoTableCheck) {
+            $pdo->exec("
+                CREATE TABLE IF NOT EXISTS `node_photos` (
+                  `id`           INT AUTO_INCREMENT PRIMARY KEY,
+                  `blueprint_id` INT NOT NULL,
+                  `device_id`    VARCHAR(100) NOT NULL,
+                  `filename`     VARCHAR(255) NOT NULL,
+                  `caption`      VARCHAR(255) NULL,
+                  `uploaded_by`  INT DEFAULT NULL,
+                  `created_at`   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  INDEX `idx_bp_device` (`blueprint_id`, `device_id`),
+                  FOREIGN KEY (`blueprint_id`) REFERENCES `blueprints`(`id`) ON DELETE CASCADE
+                ) ENGINE=InnoDB;
+            ");
+
+            // Seed sample photos for blueprint 1 nodes
+            $sampleDir = __DIR__ . '/../uploads/nodes';
+            if (file_exists("$sampleDir/sample_cam01.svg")) {
+                $pdo->exec("
+                    INSERT INTO `node_photos` (`blueprint_id`, `device_id`, `filename`, `caption`, `uploaded_by`) VALUES
+                    (1, 'CAM-01', 'sample_cam01.svg', 'Main lobby dome camera ceiling mount & C-L2-001 cable tag', 1),
+                    (1, 'CAM-02', 'sample_cam02.svg', 'East emergency exit bullet camera & weatherproof conduit', 1),
+                    (1, 'NVR-01', 'sample_nvr01.svg', 'NOC 32-Channel NVR recorder & fiber patch panel', 1)
+                ");
+            }
+        }
     }
 } catch (PDOException $e) {
     // If database doesn't exist, try connecting to MySQL server to create it automatically

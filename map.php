@@ -288,6 +288,167 @@ $imageExists = file_exists($imagePath);
         .fov-preset-btn:hover, .fov-angle-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
         .fov-angle-btn.active { background: var(--lime); color: var(--dark); border-color: var(--lime); }
 
+        /* ── SITE PHOTO ATTACHMENT & LIGHTBOX ── */
+        .photo-section-heading {
+            display: flex; flex-direction: column; gap: 4px;
+            padding-top: 14px; margin-top: 10px;
+            border-top: 1px dashed rgba(255,255,255,0.14);
+        }
+        .photo-count-badge {
+            font-size: 0.72rem; font-family: 'IBM Plex Mono', monospace; font-weight: 700;
+            color: #c4b5fd; background: rgba(139, 92, 246, 0.2);
+            padding: 2px 7px; border-radius: 4px;
+        }
+        .node-photos-container {
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .node-photo-gallery {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+            margin-top: 4px;
+        }
+        .gallery-empty {
+            grid-column: 1 / -1;
+            padding: 14px 10px; text-align: center;
+            background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.12);
+            border-radius: var(--radius-sm); font-size: 0.74rem; color: rgba(255,255,255,0.45);
+        }
+        .gallery-thumb-card {
+            position: relative; aspect-ratio: 4/3; border-radius: 6px; overflow: hidden;
+            background: #111; border: 1px solid rgba(255,255,255,0.15); cursor: pointer;
+            transition: var(--transition);
+        }
+        .gallery-thumb-card:hover {
+            border-color: var(--lime); transform: scale(1.03);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        .gallery-thumb-card img {
+            width: 100%; height: 100%; object-fit: cover; display: block;
+        }
+        .thumb-del-btn {
+            position: absolute; top: 3px; right: 3px; width: 20px; height: 20px;
+            border-radius: 50%; background: rgba(0,0,0,0.7); color: #fff;
+            border: 1px solid rgba(255,255,255,0.4); font-size: 11px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; opacity: 0; transition: opacity 0.15s ease;
+        }
+        .gallery-thumb-card:hover .thumb-del-btn { opacity: 1; }
+        .thumb-del-btn:hover { background: #ef4444; border-color: #ef4444; }
+
+        .photo-btn-row {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;
+        }
+        .btn-photo-action {
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            padding: 8px 12px; border-radius: var(--radius-sm);
+            background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.5);
+            color: #ddd6fe; font-family: var(--font); font-size: 0.78rem; font-weight: 600;
+            cursor: pointer; transition: var(--transition);
+        }
+        .btn-photo-action:hover {
+            background: #8b5cf6; color: #fff; border-color: #8b5cf6;
+        }
+        .btn-photo-action.secondary {
+            background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.85);
+        }
+        .btn-photo-action.secondary:hover {
+            background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3);
+        }
+
+        .photo-preview-bar {
+            display: flex; gap: 10px; align-items: center;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15);
+            border-radius: var(--radius-sm); padding: 8px; margin-top: 8px;
+        }
+        .preview-thumb-box {
+            width: 52px; height: 52px; border-radius: 4px; overflow: hidden;
+            background: #000; flex-shrink: 0;
+        }
+        .preview-thumb-box img { width: 100%; height: 100%; object-fit: cover; }
+        .preview-meta { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+        .photo-caption-input {
+            width: 100%; padding: 5px 8px; font-size: 0.76rem;
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 4px; color: #fff; font-family: var(--font); outline: none;
+        }
+        .photo-caption-input:focus { border-color: var(--lime); }
+        .preview-actions { display: flex; gap: 6px; }
+        .btn-upload-confirm {
+            padding: 4px 10px; border-radius: 4px; border: none;
+            background: var(--lime); color: var(--dark); font-size: 0.72rem; font-weight: 700;
+            cursor: pointer; transition: var(--transition);
+        }
+        .btn-upload-confirm:hover { background: #a8f050; }
+        .btn-upload-cancel {
+            padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2);
+            background: transparent; color: rgba(255,255,255,0.6); font-size: 0.72rem;
+            cursor: pointer;
+        }
+        .btn-upload-cancel:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+
+        .photo-upload-progress {
+            display: flex; align-items: center; gap: 8px; font-size: 0.75rem;
+            color: var(--lime); padding: 6px 0;
+        }
+        .progress-spinner {
+            width: 14px; height: 14px; border: 2px solid rgba(185,255,102,0.3);
+            border-top-color: var(--lime); border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Lightbox Modal */
+        .photo-lightbox-modal {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88);
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            z-index: 10000; align-items: center; justify-content: center; padding: 24px;
+        }
+        .photo-lightbox-modal.active { display: flex; }
+        .lightbox-dialog {
+            position: relative; max-width: 850px; width: 100%; max-height: 90vh;
+            background: #191A23; border: 1px solid rgba(255,255,255,0.15);
+            border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+        }
+        .lightbox-close-btn {
+            position: absolute; top: 12px; right: 12px; z-index: 20; width: 32px; height: 32px;
+            border-radius: 50%; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.2);
+            font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: var(--transition);
+        }
+        .lightbox-close-btn:hover { background: #ef4444; border-color: #ef4444; }
+        .lightbox-image-wrap {
+            flex: 1; min-height: 250px; max-height: calc(90vh - 110px); background: #0c0d12;
+            display: flex; align-items: center; justify-content: center; overflow: hidden;
+        }
+        .lightbox-image-wrap img {
+            max-width: 100%; max-height: calc(90vh - 110px); object-fit: contain; display: block;
+        }
+        .lightbox-footer {
+            padding: 16px 20px; background: #191A23; border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; justify-content: space-between; gap: 16px;
+        }
+        .lightbox-dev-badge {
+            background: var(--lime); color: var(--dark); font-weight: 700; font-size: 0.78rem;
+            padding: 3px 8px; border-radius: 4px; font-family: 'IBM Plex Mono', monospace;
+        }
+        .lightbox-time { font-size: 0.74rem; color: rgba(255,255,255,0.5); }
+        .lightbox-caption { font-size: 0.88rem; color: #fff; font-weight: 500; margin-top: 4px; }
+        .lightbox-btn {
+            display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px;
+            border-radius: var(--radius-pill); background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.2); color: #fff; text-decoration: none;
+            font-size: 0.78rem; font-weight: 600; transition: var(--transition);
+        }
+        .lightbox-btn:hover { background: rgba(255,255,255,0.2); border-color: #fff; }
+
+        .table-photo-badge {
+            display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px;
+            border-radius: 4px; font-size: 0.68rem; font-weight: 700;
+            background: #ede9fe; color: #6d28d9; margin-left: 6px; cursor: pointer;
+            transition: var(--transition);
+        }
+        .table-photo-badge:hover { background: #ddd6fe; color: #5b21b6; }
+
         /* ── TABLE ── */
         .table-section { padding:0 40px 60px; }
         .section-header { display:flex; align-items:center; gap:16px; margin-bottom:20px; flex-wrap:wrap; }
@@ -523,6 +684,53 @@ $imageExists = file_exists($imagePath);
                     <div class="form-group"><label>Tested By</label><input type="text" id="inputTestedBy" placeholder="Technician name" disabled></div>
                     <div class="form-group"><label>Commission Date</label><input type="date" id="inputCommissionDate" disabled></div>
                 </div>
+
+                <!-- Site Photo Evidence Section -->
+                <div class="photo-section-heading">
+                    <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+                        <span class="tc-pill" style="background:#8b5cf6; color:#fff;">📸 Site Photo Evidence</span>
+                        <span id="photoBadgeCount" class="photo-count-badge">0 photos</span>
+                    </div>
+                    <span class="tc-desc">On-Site Visual Verification &amp; As-Built Handover Records</span>
+                </div>
+
+                <div id="nodePhotosContainer" class="node-photos-container">
+                    <div id="nodePhotoGallery" class="node-photo-gallery"></div>
+
+                    <!-- Upload / Camera Capture Controls -->
+                    <div class="photo-upload-box" id="photoUploadBox">
+                        <input type="file" id="nodePhotoFileInput" accept="image/*" style="display:none;" onchange="handlePhotoSelected(event)">
+                        <div class="photo-btn-row">
+                            <button type="button" class="btn-photo-action" id="btnTakeCameraPhoto" onclick="triggerCameraCapture()" title="Use mobile camera to snap physical node">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><circle cx="12" cy="13" r="4"/></svg>
+                                <span>Take Photo</span>
+                            </button>
+                            <button type="button" class="btn-photo-action secondary" id="btnUploadFilePhoto" onclick="triggerFileSelect()" title="Browse photo from device">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                <span>Upload File</span>
+                            </button>
+                        </div>
+
+                        <!-- Selected File Preview & Caption -->
+                        <div id="photoPreviewBar" class="photo-preview-bar" style="display:none;">
+                            <div class="preview-thumb-box">
+                                <img id="photoTempPreview" src="" alt="Preview">
+                            </div>
+                            <div class="preview-meta">
+                                <input type="text" id="photoCaptionInput" placeholder="Add caption (e.g. Ceiling mount tag)..." class="photo-caption-input">
+                                <div class="preview-actions">
+                                    <button type="button" id="btnUploadPhoto" class="btn-upload-confirm" onclick="uploadSelectedPhoto()">Upload Evidence</button>
+                                    <button type="button" class="btn-upload-cancel" onclick="cancelPhotoSelection()">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="photoUploadProgress" class="photo-upload-progress" style="display:none;">
+                            <div class="progress-spinner"></div>
+                            <span>Uploading site evidence...</span>
+                        </div>
+                    </div>
+                </div>
                 </div><!-- end #nodeFormFields -->
             </div>
             <div class="panel-footer">
@@ -574,6 +782,31 @@ $imageExists = file_exists($imagePath);
         </div>
     </div>
 
+    <!-- ═══ PHOTO LIGHTBOX MODAL ═══ -->
+    <div id="photoLightboxModal" class="photo-lightbox-modal" onclick="closePhotoLightbox(event)">
+        <div class="lightbox-dialog" onclick="event.stopPropagation()">
+            <button class="lightbox-close-btn" onclick="closePhotoLightbox()" title="Close viewer">✕</button>
+            <div class="lightbox-image-wrap">
+                <img id="lightboxImg" src="" alt="Site photo">
+            </div>
+            <div class="lightbox-footer">
+                <div class="lightbox-info">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span id="lightboxDevBadge" class="lightbox-dev-badge">CAM-01</span>
+                        <span id="lightboxTime" class="lightbox-time">2026-11-05 17:30</span>
+                    </div>
+                    <div id="lightboxCaption" class="lightbox-caption">Ceiling mount &amp; conduit tag</div>
+                </div>
+                <div class="lightbox-actions">
+                    <a id="lightboxDownloadBtn" href="" download class="lightbox-btn" title="Download Full Resolution">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Full Image
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="toast-container" id="toastContainer"></div>
 
     <script>
@@ -591,6 +824,7 @@ $imageExists = file_exists($imagePath);
         let isNewPin = false;
         let fovLayerVisible = true;
         let isDraggingFovHandle = false;
+        let selectedPhotoFile = null;
 
         const PIN_SVG = `<svg viewBox="0 0 32 40" fill="none"><path d="M16 0C7.2 0 0 7.2 0 16c0 12 16 24 16 24s16-12 16-24C32 7.2 24.8 0 16 0z" fill="#ef4444"/><circle cx="16" cy="15" r="7" fill="white" opacity="0.9"/><circle cx="16" cy="15" r="3" fill="#ef4444"/></svg>`;
 
@@ -1099,6 +1333,10 @@ $imageExists = file_exists($imagePath);
             document.getElementById('btnDelete').style.display = '';
             document.getElementById('btnSave').innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Update Node`;
 
+            // Site Photos
+            const matchingNode = nodes.find(n => n.device_id === pin.dataset.deviceId);
+            renderNodePhotos(matchingNode);
+
             renderFovCones();
         }
 
@@ -1161,6 +1399,7 @@ $imageExists = file_exists($imagePath);
                 document.getElementById('btnSave').innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> Save New Node`;
                 document.getElementById('inputDeviceId').focus();
 
+                renderNodePhotos(null);
                 renderFovCones();
             });
         }
@@ -1257,6 +1496,7 @@ $imageExists = file_exists($imagePath);
             document.getElementById('panelSubtitle').textContent = 'Click the map to drop a pin';
             document.getElementById('btnDelete').style.display = 'none';
 
+            renderNodePhotos(null);
             disableFormFields();
             renderFovCones();
         }
@@ -1303,7 +1543,16 @@ $imageExists = file_exists($imagePath);
 
             tb.innerHTML = f.map(n => `
                 <tr onclick="scrollToPin('${escAttr(n.device_id)}')">
-                    <td><strong>${esc(n.device_id)}</strong></td>
+                    <td>
+                        <div style="display:flex; align-items:center; flex-wrap:wrap; gap:6px;">
+                            <strong>${esc(n.device_id)}</strong>
+                            ${(n.photo_count || 0) > 0 ? `
+                                <span class="table-photo-badge" onclick="event.stopPropagation(); scrollToPin('${escAttr(n.device_id)}');" title="${n.photo_count} site verification photo${n.photo_count !== 1 ? 's' : ''} attached">
+                                    📸 ${n.photo_count}
+                                </span>
+                            ` : ''}
+                        </div>
+                    </td>
                     <td>${esc(n.type)}</td>
                     <td>
                         <div class="ip-mono">${esc(n.ip_address||'—')}</div>
@@ -1395,6 +1644,211 @@ $imageExists = file_exists($imagePath);
                 tableSearch.addEventListener('input', (e) => handleSearchInput(e.target.value));
             }
         }
+
+        // ── SITE PHOTO EVIDENCE FUNCTIONS ──
+        function renderNodePhotos(node) {
+            const galleryEl = document.getElementById('nodePhotoGallery');
+            const badgeEl = document.getElementById('photoBadgeCount');
+            const takeBtn = document.getElementById('btnTakeCameraPhoto');
+            const uploadBtn = document.getElementById('btnUploadFilePhoto');
+            if (!galleryEl) return;
+
+            cancelPhotoSelection();
+
+            if (!node || isNewPin) {
+                galleryEl.innerHTML = `<div class="gallery-empty">Save node first before attaching on-site verification photos.</div>`;
+                if (badgeEl) badgeEl.textContent = '0 photos';
+                if (takeBtn) takeBtn.disabled = true;
+                if (uploadBtn) uploadBtn.disabled = true;
+                return;
+            }
+
+            if (takeBtn) takeBtn.disabled = false;
+            if (uploadBtn) uploadBtn.disabled = false;
+
+            const photos = node.photos || [];
+            if (badgeEl) badgeEl.textContent = `${photos.length} photo${photos.length !== 1 ? 's' : ''}`;
+
+            if (photos.length === 0) {
+                galleryEl.innerHTML = `<div class="gallery-empty">No site photos attached yet.<br>Tap "Take Photo" or "Upload File" below.</div>`;
+                return;
+            }
+
+            galleryEl.innerHTML = photos.map(p => `
+                <div class="gallery-thumb-card" title="${escAttr(p.caption || node.device_id)}" onclick="openPhotoLightbox('${escAttr(p.filename)}', '${escAttr(node.device_id)}', '${escAttr(p.caption || '')}', '${escAttr(p.created_at)}')">
+                    <img src="uploads/nodes/${escAttr(p.filename)}" alt="${escAttr(p.caption || '')}" loading="lazy">
+                    <button type="button" class="thumb-del-btn" onclick="deleteNodePhoto(event, ${p.id}, '${escAttr(node.device_id)}')" title="Delete this photo">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function triggerCameraCapture() {
+            if (isNewPin || !selectedPin) {
+                showToast('Please save node details first before attaching photos', 'info');
+                return;
+            }
+            const input = document.getElementById('nodePhotoFileInput');
+            input.setAttribute('capture', 'environment');
+            input.value = '';
+            input.click();
+        }
+
+        function triggerFileSelect() {
+            if (isNewPin || !selectedPin) {
+                showToast('Please save node details first before attaching photos', 'info');
+                return;
+            }
+            const input = document.getElementById('nodePhotoFileInput');
+            input.removeAttribute('capture');
+            input.value = '';
+            input.click();
+        }
+
+        function handlePhotoSelected(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+
+            if (!file.type.match(/^image\//)) {
+                showToast('Please select a valid image file (JPG, PNG, WEBP, SVG)', 'error');
+                return;
+            }
+            if (file.size > 25 * 1024 * 1024) {
+                showToast('Photo too large. Max 25 MB', 'error');
+                return;
+            }
+
+            selectedPhotoFile = file;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const previewImg = document.getElementById('photoTempPreview');
+                if (previewImg) previewImg.src = ev.target.result;
+                const captionInp = document.getElementById('photoCaptionInput');
+                if (captionInp) captionInp.value = '';
+                const bar = document.getElementById('photoPreviewBar');
+                if (bar) bar.style.display = 'flex';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function cancelPhotoSelection() {
+            selectedPhotoFile = null;
+            const input = document.getElementById('nodePhotoFileInput');
+            if (input) input.value = '';
+            const bar = document.getElementById('photoPreviewBar');
+            if (bar) bar.style.display = 'none';
+        }
+
+        async function uploadSelectedPhoto() {
+            if (!selectedPhotoFile) {
+                showToast('No photo selected', 'error');
+                return;
+            }
+            if (!selectedPin || isNewPin) {
+                showToast('Node must be saved before uploading photos', 'error');
+                return;
+            }
+
+            const deviceId = selectedPin.dataset.deviceId;
+            const caption = document.getElementById('photoCaptionInput').value.trim();
+
+            const progressEl = document.getElementById('photoUploadProgress');
+            const btnUpload = document.getElementById('btnUploadPhoto');
+            if (progressEl) progressEl.style.display = 'flex';
+            if (btnUpload) btnUpload.disabled = true;
+
+            const fd = new FormData();
+            fd.append('blueprint_id', BLUEPRINT_ID);
+            fd.append('device_id', deviceId);
+            fd.append('photo', selectedPhotoFile);
+            if (caption) fd.append('caption', caption);
+
+            try {
+                const res = await fetch('api/upload_node_photo.php', {
+                    method: 'POST',
+                    body: fd
+                });
+                const json = await res.json();
+                if (json.success && json.photo) {
+                    showToast('Site photo attached successfully!', 'success');
+
+                    const node = nodes.find(n => n.device_id === deviceId);
+                    if (node) {
+                        if (!node.photos) node.photos = [];
+                        node.photos.unshift(json.photo);
+                        node.photo_count = node.photos.length;
+                        renderNodePhotos(node);
+                        renderTable();
+                    }
+                    cancelPhotoSelection();
+                } else {
+                    showToast(json.error || 'Failed to upload photo', 'error');
+                }
+            } catch (err) {
+                showToast('Network error while uploading photo', 'error');
+            } finally {
+                if (progressEl) progressEl.style.display = 'none';
+                if (btnUpload) btnUpload.disabled = false;
+            }
+        }
+
+        async function deleteNodePhoto(e, photoId, deviceId) {
+            e.stopPropagation();
+            if (!confirm('Are you sure you want to remove this site verification photo?')) return;
+
+            try {
+                const res = await fetch('api/delete_node_photo.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ photo_id: photoId })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    showToast('Site photo removed', 'info');
+                    const node = nodes.find(n => n.device_id === deviceId);
+                    if (node && node.photos) {
+                        node.photos = node.photos.filter(p => parseInt(p.id) !== parseInt(photoId));
+                        node.photo_count = node.photos.length;
+                        renderNodePhotos(node);
+                        renderTable();
+                    }
+                } else {
+                    showToast(json.error || 'Failed to delete photo', 'error');
+                }
+            } catch (err) {
+                showToast('Network error while deleting photo', 'error');
+            }
+        }
+
+        // ── LIGHTBOX VIEWER ──
+        function openPhotoLightbox(filename, devId, caption, createdAt) {
+            const modal = document.getElementById('photoLightboxModal');
+            const img = document.getElementById('lightboxImg');
+            const badge = document.getElementById('lightboxDevBadge');
+            const captionEl = document.getElementById('lightboxCaption');
+            const timeEl = document.getElementById('lightboxTime');
+            const dlBtn = document.getElementById('lightboxDownloadBtn');
+
+            const src = 'uploads/nodes/' + filename;
+            img.src = src;
+            badge.textContent = devId;
+            captionEl.textContent = caption || 'Physical installation verification & conduit tagging';
+            timeEl.textContent = createdAt ? new Date(createdAt).toLocaleString() : '';
+            dlBtn.href = src;
+
+            modal.classList.add('active');
+        }
+
+        function closePhotoLightbox(e) {
+            if (e && e.target && e.target.closest('.lightbox-dialog') && !e.target.classList.contains('lightbox-close-btn')) {
+                return;
+            }
+            const modal = document.getElementById('photoLightboxModal');
+            if (modal) modal.classList.remove('active');
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closePhotoLightbox();
+        });
 
         // ── TOAST ──
         function showToast(m,t='info') {

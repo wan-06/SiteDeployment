@@ -123,3 +123,26 @@ VALUES
   (1, 'NVR-01',   'NVR Rack',         'DS-7732NI-I4-20230510CCXE',    '192.168.1.10',  'BC:54:51:10:00:0A', 'SW-CORE-01', 'G01 (Trunk)',    'FIB-MDF-01',14.0000, 70.0000, 'Live',             'NOC Server Rack A Unit 4',                 'Wan Pidin',      '2026-10-12', 0, 90, 0,   15, 1),
   (1, 'AP-01',    'Access Point',     'RG-AP820-L-20230718DDWE',      '192.168.1.201', '58:69:6C:44:19:80', 'SW-MDF-01',  'P12 (PoE)',      'C-L2-012', 50.0000, 50.0000, 'Live',             'Central corridor ceiling PoE AP',          'Technician Ali', '2026-10-16', 0, 90, 0,   15, 2),
   (1, 'DOOR-01',  'Access Door',      'DS-K2604T-20230401MMKL',       '192.168.1.50',  'BC:54:51:88:31:0D', 'SW-MDF-01',  'P16',            'C-SEC-001', 15.0000, 56.0000, 'Troubleshoot',     'Server room card reader offline',          'Wan Pidin',      NULL,         0, 90, 0,   15, 1);
+
+-- =============================================
+-- NODE PHOTOS (Mobile Site Photo Attachments & As-Built Evidence)
+-- =============================================
+CREATE TABLE IF NOT EXISTS `node_photos` (
+  `id`           INT AUTO_INCREMENT PRIMARY KEY,
+  `blueprint_id` INT NOT NULL,
+  `device_id`    VARCHAR(100) NOT NULL,
+  `filename`     VARCHAR(255) NOT NULL,
+  `caption`      VARCHAR(255) NULL,
+  `uploaded_by`  INT DEFAULT NULL,
+  `created_at`   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_bp_device` (`blueprint_id`, `device_id`),
+  FOREIGN KEY (`blueprint_id`) REFERENCES `blueprints`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- =============================================
+-- SEED SAMPLE NODE PHOTOS FOR BLUEPRINT 1
+-- =============================================
+INSERT INTO `node_photos` (`blueprint_id`, `device_id`, `filename`, `caption`, `uploaded_by`) VALUES
+  (1, 'CAM-01', 'sample_cam01.svg', 'Main lobby dome camera ceiling mount & C-L2-001 cable tag', 1),
+  (1, 'CAM-02', 'sample_cam02.svg', 'East emergency exit bullet camera & weatherproof conduit', 1),
+  (1, 'NVR-01', 'sample_nvr01.svg', 'NOC 32-Channel NVR recorder & fiber patch panel', 1);
