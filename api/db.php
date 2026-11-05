@@ -42,6 +42,18 @@ try {
                 ADD COLUMN `commission_date` DATE         NULL AFTER `tested_by`
             ");
         }
+
+        // Auto-migration: ensure Camera Field-of-View (FoV) columns exist in nodes table
+        $fovCheck = $pdo->query("SHOW COLUMNS FROM nodes LIKE 'fov_angle'")->fetch();
+        if (!$fovCheck) {
+            $pdo->exec("
+                ALTER TABLE nodes
+                ADD COLUMN `fov_enabled`   TINYINT(1)   NOT NULL DEFAULT 0 AFTER `commission_date`,
+                ADD COLUMN `fov_angle`     INT          NOT NULL DEFAULT 90 AFTER `fov_enabled`,
+                ADD COLUMN `fov_direction` INT          NOT NULL DEFAULT 0 AFTER `fov_angle`,
+                ADD COLUMN `fov_distance`  INT          NOT NULL DEFAULT 15 AFTER `fov_direction`
+            ");
+        }
     }
 } catch (PDOException $e) {
     // If database doesn't exist, try connecting to MySQL server to create it automatically

@@ -46,6 +46,10 @@ $status          = trim($data['status'] ?? 'Planned');
 $notes           = trim($data['notes'] ?? '');
 $tested_by       = trim($data['tested_by'] ?? '');
 $commission_date = !empty($data['commission_date']) ? trim($data['commission_date']) : null;
+$fov_enabled     = !empty($data['fov_enabled']) ? 1 : 0;
+$fov_angle       = isset($data['fov_angle']) ? max(10, min(360, intval($data['fov_angle']))) : 90;
+$fov_direction   = isset($data['fov_direction']) ? ((intval($data['fov_direction']) % 360) + 360) % 360 : 0;
+$fov_distance    = isset($data['fov_distance']) ? max(2, min(80, intval($data['fov_distance']))) : 15;
 
 try {
     $check = $pdo->prepare("SELECT id FROM nodes WHERE blueprint_id = ? AND device_id = ?");
@@ -56,13 +60,15 @@ try {
             UPDATE nodes SET 
                 type = ?, serial_number = ?, ip_address = ?, mac_address = ?, 
                 switch_id = ?, port_no = ?, cable_label = ?, pos_x = ?, pos_y = ?, 
-                status = ?, notes = ?, tested_by = ?, commission_date = ?
+                status = ?, notes = ?, tested_by = ?, commission_date = ?,
+                fov_enabled = ?, fov_angle = ?, fov_direction = ?, fov_distance = ?
             WHERE blueprint_id = ? AND device_id = ?
         ");
         $update->execute([
             $type, $serial_number, $ip_address, $mac_address,
             $switch_id, $port_no, $cable_label, $pos_x, $pos_y,
             $status, $notes, $tested_by, $commission_date,
+            $fov_enabled, $fov_angle, $fov_direction, $fov_distance,
             $blueprintId, $deviceId
         ]);
         echo json_encode(['success' => true, 'action' => 'updated', 'message' => "Node '{$deviceId}' updated"]);
@@ -71,14 +77,14 @@ try {
             INSERT INTO nodes (
                 blueprint_id, device_id, type, serial_number, ip_address, mac_address, 
                 switch_id, port_no, cable_label, pos_x, pos_y, status, notes, 
-                tested_by, commission_date, created_by
+                tested_by, commission_date, fov_enabled, fov_angle, fov_direction, fov_distance, created_by
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         $insert->execute([
             $blueprintId, $deviceId, $type, $serial_number, $ip_address, $mac_address,
             $switch_id, $port_no, $cable_label, $pos_x, $pos_y, $status, $notes,
-            $tested_by, $commission_date, $user['id']
+            $tested_by, $commission_date, $fov_enabled, $fov_angle, $fov_direction, $fov_distance, $user['id']
         ]);
         echo json_encode(['success' => true, 'action' => 'created', 'message' => "Node '{$deviceId}' created", 'id' => $pdo->lastInsertId()]);
     }

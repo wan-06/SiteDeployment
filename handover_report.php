@@ -474,10 +474,58 @@ $imagePath = 'uploads/blueprints/' . htmlspecialchars($blueprint['image_filename
         <!-- ── SECTION 1: AS-BUILT DRAWING ── -->
         <div class="section-heading">
             <span class="section-pill">Section 1</span>
-            <span class="section-title">As-Built Floorplan Hardware Overlay</span>
+            <span class="section-title">As-Built Floorplan &amp; Camera Coverage Overlay</span>
         </div>
         <div class="floorplan-viewer">
             <img src="<?= $imagePath ?>" alt="Floorplan Drawing">
+
+            <!-- SVG Camera Field-of-View (FoV) Cones -->
+            <?php
+            $vw = intval($blueprint['image_width']) ?: 1600;
+            $vh = intval($blueprint['image_height']) ?: 1000;
+            ?>
+            <svg class="report-fov-svg" viewBox="0 0 <?= $vw ?> <?= $vh ?>" style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:2;">
+                <?php
+                foreach ($nodes as $n):
+                    if (empty($n['fov_enabled'])) continue;
+                    $cx = (floatval($n['pos_x']) / 100) * $vw;
+                    $cy = (floatval($n['pos_y']) / 100) * $vh;
+                    $dist = !empty($n['fov_distance']) ? intval($n['fov_distance']) : 15;
+                    $r = ($dist / 100) * $vw;
+                    $dir = !empty($n['fov_direction']) ? intval($n['fov_direction']) : 0;
+                    $angle = !empty($n['fov_angle']) ? intval($n['fov_angle']) : 90;
+
+                    $status = $n['status'];
+                    $fill = 'rgba(34, 197, 94, 0.22)';
+                    $stroke = 'rgba(34, 197, 94, 0.85)';
+                    if ($status === 'Hardware Mounted') { $fill = 'rgba(245, 158, 11, 0.22)'; $stroke = 'rgba(245, 158, 11, 0.85)'; }
+                    elseif ($status === 'Cable Pulled') { $fill = 'rgba(59, 130, 246, 0.22)'; $stroke = 'rgba(59, 130, 246, 0.85)'; }
+                    elseif ($status === 'Planned') { $fill = 'rgba(239, 68, 68, 0.22)'; $stroke = 'rgba(239, 68, 68, 0.85)'; }
+                    elseif ($status === 'Troubleshoot') { $fill = 'rgba(168, 85, 247, 0.22)'; $stroke = 'rgba(168, 85, 247, 0.85)'; }
+
+                    if ($angle >= 360): ?>
+                        <circle cx="<?= round($cx, 1) ?>" cy="<?= round($cy, 1) ?>" r="<?= round($r, 1) ?>" fill="<?= $fill ?>" stroke="<?= $stroke ?>" stroke-width="1.5" />
+                    <?php else: 
+                        $rad1 = ($dir - ($angle / 2)) * (M_PI / 180);
+                        $rad2 = ($dir + ($angle / 2)) * (M_PI / 180);
+                        $radM = $dir * (M_PI / 180);
+
+                        $x1 = $cx + $r * sin($rad1);
+                        $y1 = $cy - $r * cos($rad1);
+                        $x2 = $cx + $r * sin($rad2);
+                        $y2 = $cy - $r * cos($rad2);
+                        $xm = $cx + $r * sin($radM);
+                        $ym = $cy - $r * cos($radM);
+
+                        $largeArc = ($angle > 180) ? 1 : 0;
+                        $d = sprintf("M %.1f %.1f L %.1f %.1f A %.1f %.1f 0 %d 1 %.1f %.1f Z", $cx, $cy, $x1, $y1, $r, $r, $largeArc, $x2, $y2);
+                    ?>
+                        <path d="<?= $d ?>" fill="<?= $fill ?>" stroke="<?= $stroke ?>" stroke-width="1.5" />
+                        <line x1="<?= round($cx, 1) ?>" y1="<?= round($cy, 1) ?>" x2="<?= round($xm, 1) ?>" y2="<?= round($ym, 1) ?>" stroke="<?= $stroke ?>" stroke-width="1" stroke-dasharray="3 2" />
+                    <?php endif;
+                endforeach; ?>
+            </svg>
+
             <?php 
             $pinIdx = 1;
             foreach ($nodes as $n): 

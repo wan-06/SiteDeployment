@@ -202,6 +202,92 @@ $imageExists = file_exists($imagePath);
         .tc-desc { font-size: 0.72rem; color: rgba(255,255,255,0.45); }
         .tag-mono { font-family:'SF Mono','Cascadia Code','Consolas',monospace; font-size:0.75rem; background:#E5E7EB; color:#111; padding:2px 6px; border-radius:4px; font-weight:700; }
 
+        /* ── CAMERA FOV DIRECTIONAL CONES ── */
+        .btn-fov-toggle {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 12px; border-radius: var(--radius-pill);
+            border: 1px solid var(--border); background: var(--surface);
+            font-family: var(--font); font-size: 0.75rem; font-weight: 600;
+            cursor: pointer; transition: var(--transition); color: var(--text-muted);
+        }
+        .btn-fov-toggle:hover { border-color: var(--dark); color: var(--text); }
+        .btn-fov-toggle.active { background: var(--lime); border-color: var(--dark); color: var(--dark); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+
+        .fov-svg-layer {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 5; overflow: visible;
+        }
+        .fov-cone-path {
+            transition: fill 0.2s ease, stroke 0.2s ease, opacity 0.2s ease;
+            mix-blend-mode: normal;
+        }
+        .fov-cone-path.active-selected {
+            filter: drop-shadow(0 0 8px rgba(185, 255, 102, 0.75));
+        }
+        .fov-sightline {
+            stroke-dasharray: 4 3;
+            pointer-events: none;
+        }
+        .fov-handle {
+            pointer-events: all;
+            cursor: grab;
+            transition: transform 0.15s ease, r 0.15s ease;
+        }
+        .fov-handle:hover, .fov-handle:active {
+            transform: scale(1.35);
+            cursor: grabbing;
+        }
+
+        .fov-section-heading {
+            display: flex; flex-direction: column; gap: 4px;
+            padding-top: 14px; margin-top: 10px;
+            border-top: 1px dashed rgba(255,255,255,0.14);
+        }
+        .fov-toggle-switch {
+            position: relative; display: inline-block; width: 36px; height: 20px; cursor: pointer;
+        }
+        .fov-toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .fov-toggle-slider {
+            position: absolute; cursor: pointer; inset: 0;
+            background-color: rgba(255,255,255,0.2);
+            transition: .25s; border-radius: 20px;
+        }
+        .fov-toggle-slider:before {
+            position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px;
+            background-color: white; transition: .25s; border-radius: 50%;
+        }
+        .fov-toggle-switch input:checked + .fov-toggle-slider { background-color: var(--lime); }
+        .fov-toggle-switch input:checked + .fov-toggle-slider:before {
+            transform: translateX(16px); background-color: var(--dark);
+        }
+
+        .fov-controls-group {
+            display: flex; flex-direction: column; gap: 12px;
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: var(--radius-sm); padding: 12px; margin-top: 6px;
+        }
+        .fov-val-badge {
+            font-size: 0.72rem; font-family: 'IBM Plex Mono', monospace; font-weight: 700;
+            color: var(--lime); background: rgba(185,255,102,0.12);
+            padding: 2px 7px; border-radius: 4px;
+        }
+        .fov-slider {
+            -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px;
+            background: rgba(255,255,255,0.18); outline: none; margin: 6px 0;
+        }
+        .fov-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%;
+            background: var(--lime); cursor: pointer; border: 2px solid var(--dark);
+        }
+        .fov-preset-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 4px; }
+        .fov-preset-btn, .fov-angle-btn {
+            background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+            color: rgba(255,255,255,0.75); border-radius: 4px; padding: 4px 0;
+            font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: var(--transition);
+        }
+        .fov-preset-btn:hover, .fov-angle-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+        .fov-angle-btn.active { background: var(--lime); color: var(--dark); border-color: var(--lime); }
+
         /* ── TABLE ── */
         .table-section { padding:0 40px 60px; }
         .section-header { display:flex; align-items:center; gap:16px; margin-bottom:20px; flex-wrap:wrap; }
@@ -304,12 +390,19 @@ $imageExists = file_exists($imagePath);
                         <button id="mapSearchClear" type="button" class="search-clear-btn" style="display:none;" title="Clear search">✕</button>
                     </div>
                 </div>
-                <span style="font-size:0.75rem;color:var(--text-muted);font-weight:600;" id="pinCount">0 pins</span>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <button type="button" id="btnToggleFov" class="btn-fov-toggle active" title="Toggle camera field-of-view directional cones">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><circle cx="12" cy="13" r="4"/></svg>
+                        <span id="fovToggleText">FoV: ON</span>
+                    </button>
+                    <span style="font-size:0.75rem;color:var(--text-muted);font-weight:600;" id="pinCount">0 pins</span>
+                </div>
             </div>
             <div class="blueprint-area" id="blueprintArea">
                 <?php if ($imageExists): ?>
                     <div class="blueprint-stage" id="blueprintStage">
                         <img src="uploads/blueprints/<?= htmlspecialchars($blueprint['image_filename']) ?>" alt="Blueprint" id="blueprintImg">
+                        <svg id="fovSvgLayer" class="fov-svg-layer"></svg>
                     </div>
                 <?php else: ?>
                     <div class="missing-bp-warning">
@@ -360,6 +453,59 @@ $imageExists = file_exists($imagePath);
                     </select>
                 </div>
                 <div class="form-group"><label>Notes</label><textarea id="inputNotes" placeholder="Field notes..." disabled></textarea></div>
+
+                <!-- Camera Field-of-View (FoV) Coverage Section -->
+                <div class="fov-section-heading">
+                    <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+                        <span class="tc-pill" style="background:#0284c7; color:#fff;">📷 Camera FoV Cone</span>
+                        <label class="fov-toggle-switch" title="Enable or disable camera FoV coverage cone">
+                            <input type="checkbox" id="inputFovEnabled" disabled>
+                            <span class="fov-toggle-slider"></span>
+                        </label>
+                    </div>
+                    <span class="tc-desc">Directional CCTV Coverage &amp; Blind Spots</span>
+                </div>
+
+                <div id="fovControlsGroup" class="fov-controls-group" style="display:none;">
+                    <!-- Aim Direction -->
+                    <div class="form-group">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <label>Aim Direction (Rotation)</label>
+                            <span id="fovDirectionVal" class="fov-val-badge">0° (North)</span>
+                        </div>
+                        <input type="range" id="inputFovDirection" min="0" max="359" value="0" class="fov-slider" disabled>
+                        <div class="fov-preset-row">
+                            <button type="button" class="fov-preset-btn" data-dir="0">↑ N 0°</button>
+                            <button type="button" class="fov-preset-btn" data-dir="90">→ E 90°</button>
+                            <button type="button" class="fov-preset-btn" data-dir="180">↓ S 180°</button>
+                            <button type="button" class="fov-preset-btn" data-dir="270">← W 270°</button>
+                        </div>
+                    </div>
+
+                    <!-- Lens Spread (FoV) -->
+                    <div class="form-group">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <label>Lens Spread (FoV Angle)</label>
+                            <span id="fovAngleVal" class="fov-val-badge">90° (Standard)</span>
+                        </div>
+                        <input type="range" id="inputFovAngle" min="30" max="180" step="5" value="90" class="fov-slider" disabled>
+                        <div class="fov-preset-row">
+                            <button type="button" class="fov-angle-btn" data-angle="60">60° Tele</button>
+                            <button type="button" class="fov-angle-btn active" data-angle="90">90° Std</button>
+                            <button type="button" class="fov-angle-btn" data-angle="120">120° Wide</button>
+                            <button type="button" class="fov-angle-btn" data-angle="360">360° Omni</button>
+                        </div>
+                    </div>
+
+                    <!-- Coverage Range / Distance -->
+                    <div class="form-group">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <label>Coverage Throw Distance</label>
+                            <span id="fovDistanceVal" class="fov-val-badge">15% (~15m)</span>
+                        </div>
+                        <input type="range" id="inputFovDistance" min="5" max="40" value="15" class="fov-slider" disabled>
+                    </div>
+                </div>
 
                 <!-- ELV Testing & Commissioning (T&C) Section -->
                 <div class="tc-heading">
@@ -443,6 +589,8 @@ $imageExists = file_exists($imagePath);
         let activeFilter = 'all';
         let currentSearchQuery = '';
         let isNewPin = false;
+        let fovLayerVisible = true;
+        let isDraggingFovHandle = false;
 
         const PIN_SVG = `<svg viewBox="0 0 32 40" fill="none"><path d="M16 0C7.2 0 0 7.2 0 16c0 12 16 24 16 24s16-12 16-24C32 7.2 24.8 0 16 0z" fill="#ef4444"/><circle cx="16" cy="15" r="7" fill="white" opacity="0.9"/><circle cx="16" cy="15" r="3" fill="#ef4444"/></svg>`;
 
@@ -450,7 +598,298 @@ $imageExists = file_exists($imagePath);
             fetchNodes();
             if (IMAGE_EXISTS) setupBlueprintClick();
             setupFilters();
+            setupFovEventListeners();
         });
+
+        // ── CAMERA UTILITY HELPERS ──
+        function isCameraType(t) {
+            if (!t) return false;
+            const s = t.toLowerCase();
+            return s.includes('dome') || s.includes('bullet') || s.includes('ptz') || s.includes('camera') || s.includes('cctv');
+        }
+
+        function getFovColors(status, isSelected) {
+            if (isSelected) {
+                return { fill: 'rgba(185, 255, 102, 0.32)', stroke: '#B9FF66' };
+            }
+            switch(status) {
+                case 'Live':
+                    return { fill: 'rgba(34, 197, 94, 0.22)', stroke: 'rgba(34, 197, 94, 0.85)' };
+                case 'Hardware Mounted':
+                    return { fill: 'rgba(245, 158, 11, 0.22)', stroke: 'rgba(245, 158, 11, 0.85)' };
+                case 'Cable Pulled':
+                    return { fill: 'rgba(59, 130, 246, 0.22)', stroke: 'rgba(59, 130, 246, 0.85)' };
+                case 'Planned':
+                    return { fill: 'rgba(239, 68, 68, 0.22)', stroke: 'rgba(239, 68, 68, 0.85)' };
+                case 'Troubleshoot':
+                    return { fill: 'rgba(168, 85, 247, 0.22)', stroke: 'rgba(168, 85, 247, 0.85)' };
+                default:
+                    return { fill: 'rgba(185, 255, 102, 0.22)', stroke: 'rgba(185, 255, 102, 0.85)' };
+            }
+        }
+
+        function updateFovLabels() {
+            const dir = parseInt(document.getElementById('inputFovDirection').value) || 0;
+            const angle = parseInt(document.getElementById('inputFovAngle').value) || 90;
+            const dist = parseInt(document.getElementById('inputFovDistance').value) || 15;
+
+            // Direction compass text
+            let comp = 'North';
+            if (dir > 22 && dir <= 67) comp = 'NE';
+            else if (dir > 67 && dir <= 112) comp = 'East';
+            else if (dir > 112 && dir <= 157) comp = 'SE';
+            else if (dir > 157 && dir <= 202) comp = 'South';
+            else if (dir > 202 && dir <= 247) comp = 'SW';
+            else if (dir > 247 && dir <= 292) comp = 'West';
+            else if (dir > 292 && dir <= 337) comp = 'NW';
+            document.getElementById('fovDirectionVal').textContent = `${dir}° (${comp})`;
+
+            // Lens angle text
+            let lens = 'Standard';
+            if (angle <= 65) lens = 'Narrow / Tele';
+            else if (angle <= 95) lens = 'Standard';
+            else if (angle <= 140) lens = 'Wide Angle';
+            else if (angle >= 350) lens = '360° Fisheye';
+            document.getElementById('fovAngleVal').textContent = `${angle}° (${lens})`;
+
+            // Distance text
+            document.getElementById('fovDistanceVal').textContent = `${dist}% (~${Math.round(dist * 1.0)}m)`;
+
+            // Active preset highlights
+            document.querySelectorAll('.fov-preset-btn').forEach(b => {
+                b.classList.toggle('active', parseInt(b.dataset.dir) === dir);
+            });
+            document.querySelectorAll('.fov-angle-btn').forEach(b => {
+                b.classList.toggle('active', parseInt(b.dataset.angle) === angle);
+            });
+        }
+
+        // ── RENDER FOV DIRECTIONAL CONES ──
+        function renderFovCones() {
+            const svg = document.getElementById('fovSvgLayer');
+            if (!svg) return;
+            svg.innerHTML = '';
+            if (!fovLayerVisible || !IMAGE_EXISTS) return;
+
+            const img = document.getElementById('blueprintImg');
+            const vw = BP_WIDTH || (img && img.naturalWidth) || 1600;
+            const vh = BP_HEIGHT || (img && img.naturalHeight) || 1000;
+            svg.setAttribute('viewBox', `0 0 ${vw} ${vh}`);
+
+            nodes.forEach(node => {
+                if (!nodeMatchesSearchAndFilter(node)) return;
+
+                const isSelected = selectedPin && selectedPin.dataset.deviceId === node.device_id;
+                let fovEnabled = parseInt(node.fov_enabled || 0) === 1;
+                let dir   = parseInt(node.fov_direction || 0);
+                let angle = parseInt(node.fov_angle || 90);
+                let dist  = parseInt(node.fov_distance || 15);
+
+                // Use live inspector values if selected
+                if (isSelected) {
+                    fovEnabled = document.getElementById('inputFovEnabled').checked;
+                    dir   = parseInt(document.getElementById('inputFovDirection').value) || 0;
+                    angle = parseInt(document.getElementById('inputFovAngle').value) || 90;
+                    dist  = parseInt(document.getElementById('inputFovDistance').value) || 15;
+                }
+
+                if (!fovEnabled) return;
+
+                const cx = (parseFloat(node.pos_x) / 100) * vw;
+                const cy = (parseFloat(node.pos_y) / 100) * vh;
+                const r  = (dist / 100) * vw;
+                const colors = getFovColors(node.status, isSelected);
+
+                drawSingleFovCone(svg, cx, cy, r, dir, angle, colors, isSelected, vw, vh);
+            });
+
+            // If placing a new pin with FoV enabled
+            if (isNewPin && currentPosX !== null && currentPosY !== null && document.getElementById('inputFovEnabled').checked) {
+                const cx = (currentPosX / 100) * vw;
+                const cy = (currentPosY / 100) * vh;
+                const dir   = parseInt(document.getElementById('inputFovDirection').value) || 0;
+                const angle = parseInt(document.getElementById('inputFovAngle').value) || 90;
+                const dist  = parseInt(document.getElementById('inputFovDistance').value) || 15;
+                const r = (dist / 100) * vw;
+                const colors = { fill: 'rgba(185, 255, 102, 0.35)', stroke: '#B9FF66' };
+                drawSingleFovCone(svg, cx, cy, r, dir, angle, colors, true, vw, vh);
+            }
+        }
+
+        function drawSingleFovCone(svg, cx, cy, r, dir, angle, colors, isSelected, vw, vh) {
+            if (angle >= 360) {
+                // 360 Omnidirectional
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', cx.toFixed(1));
+                circle.setAttribute('cy', cy.toFixed(1));
+                circle.setAttribute('r', r.toFixed(1));
+                circle.setAttribute('fill', colors.fill);
+                circle.setAttribute('stroke', colors.stroke);
+                circle.setAttribute('stroke-width', isSelected ? '2.5' : '1.5');
+                circle.setAttribute('class', 'fov-cone-path' + (isSelected ? ' active-selected' : ''));
+                svg.appendChild(circle);
+                return;
+            }
+
+            const rad1 = (dir - (angle / 2)) * (Math.PI / 180);
+            const rad2 = (dir + (angle / 2)) * (Math.PI / 180);
+            const radM = dir * (Math.PI / 180);
+
+            const x1 = cx + r * Math.sin(rad1);
+            const y1 = cy - r * Math.cos(rad1);
+            const x2 = cx + r * Math.sin(rad2);
+            const y2 = cy - r * Math.cos(rad2);
+            const xm = cx + r * Math.sin(radM);
+            const ym = cy - r * Math.cos(radM);
+
+            const largeArc = angle > 180 ? 1 : 0;
+            const d = `M ${cx.toFixed(1)} ${cy.toFixed(1)} L ${x1.toFixed(1)} ${y1.toFixed(1)} A ${r.toFixed(1)} ${r.toFixed(1)} 0 ${largeArc} 1 ${x2.toFixed(1)} ${y2.toFixed(1)} Z`;
+
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', d);
+            path.setAttribute('fill', colors.fill);
+            path.setAttribute('stroke', colors.stroke);
+            path.setAttribute('stroke-width', isSelected ? '2.5' : '1.5');
+            path.setAttribute('class', 'fov-cone-path' + (isSelected ? ' active-selected' : ''));
+            svg.appendChild(path);
+
+            // Boresight dashed sightline
+            const ray = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            ray.setAttribute('x1', cx.toFixed(1));
+            ray.setAttribute('y1', cy.toFixed(1));
+            ray.setAttribute('x2', xm.toFixed(1));
+            ray.setAttribute('y2', ym.toFixed(1));
+            ray.setAttribute('stroke', colors.stroke);
+            ray.setAttribute('stroke-width', isSelected ? '1.8' : '1.2');
+            ray.setAttribute('class', 'fov-sightline');
+            svg.appendChild(ray);
+
+            // Interactive rotation handle at cone tip
+            if (isSelected) {
+                const handle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                handle.setAttribute('cx', xm.toFixed(1));
+                handle.setAttribute('cy', ym.toFixed(1));
+                handle.setAttribute('r', '8');
+                handle.setAttribute('fill', '#B9FF66');
+                handle.setAttribute('stroke', '#191A23');
+                handle.setAttribute('stroke-width', '2.5');
+                handle.setAttribute('class', 'fov-handle');
+                handle.setAttribute('title', 'Drag to aim camera angle');
+
+                handle.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                    startAimDrag(cx, cy, vw, vh);
+                });
+                svg.appendChild(handle);
+            }
+        }
+
+        // ── INTERACTIVE DRAG TO AIM ──
+        function startAimDrag(cx, cy, vw, vh) {
+            isDraggingFovHandle = true;
+            const stage = document.getElementById('blueprintStage');
+
+            function onMouseMove(e) {
+                if (!isDraggingFovHandle) return;
+                const rect = stage.getBoundingClientRect();
+                const mx = ((e.clientX - rect.left) / rect.width) * vw;
+                const my = ((e.clientY - rect.top) / rect.height) * vh;
+
+                let deg = Math.atan2(mx - cx, -(my - cy)) * (180 / Math.PI);
+                if (deg < 0) deg += 360;
+                deg = Math.round(deg);
+
+                document.getElementById('inputFovDirection').value = deg;
+                updateFovLabels();
+                renderFovCones();
+            }
+
+            function onMouseUp() {
+                isDraggingFovHandle = false;
+                window.removeEventListener('mousemove', onMouseMove);
+                window.removeEventListener('mouseup', onMouseUp);
+            }
+
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onMouseUp);
+        }
+
+        // ── FOV EVENT LISTENERS ──
+        function setupFovEventListeners() {
+            const toggleBtn = document.getElementById('btnToggleFov');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => {
+                    fovLayerVisible = !fovLayerVisible;
+                    toggleBtn.classList.toggle('active', fovLayerVisible);
+                    document.getElementById('fovToggleText').textContent = fovLayerVisible ? 'FoV: ON' : 'FoV: OFF';
+                    renderFovCones();
+                });
+            }
+
+            const fovCheckbox = document.getElementById('inputFovEnabled');
+            const fovControls = document.getElementById('fovControlsGroup');
+            if (fovCheckbox) {
+                fovCheckbox.addEventListener('change', () => {
+                    fovControls.style.display = fovCheckbox.checked ? 'flex' : 'none';
+                    updateFovLabels();
+                    renderFovCones();
+                });
+            }
+
+            const dirSlider = document.getElementById('inputFovDirection');
+            if (dirSlider) {
+                dirSlider.addEventListener('input', () => {
+                    updateFovLabels();
+                    renderFovCones();
+                });
+            }
+
+            const angleSlider = document.getElementById('inputFovAngle');
+            if (angleSlider) {
+                angleSlider.addEventListener('input', () => {
+                    updateFovLabels();
+                    renderFovCones();
+                });
+            }
+
+            const distSlider = document.getElementById('inputFovDistance');
+            if (distSlider) {
+                distSlider.addEventListener('input', () => {
+                    updateFovLabels();
+                    renderFovCones();
+                });
+            }
+
+            // Presets
+            document.querySelectorAll('.fov-preset-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    dirSlider.value = btn.dataset.dir;
+                    updateFovLabels();
+                    renderFovCones();
+                });
+            });
+
+            document.querySelectorAll('.fov-angle-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    angleSlider.value = btn.dataset.angle;
+                    updateFovLabels();
+                    renderFovCones();
+                });
+            });
+
+            // Auto-enable FoV when camera type is selected
+            const typeSelect = document.getElementById('inputType');
+            if (typeSelect) {
+                typeSelect.addEventListener('change', () => {
+                    if (isCameraType(typeSelect.value) && !fovCheckbox.checked) {
+                        fovCheckbox.checked = true;
+                        fovControls.style.display = 'flex';
+                        updateFovLabels();
+                        renderFovCones();
+                    }
+                });
+            }
+        }
 
         // ── FILTER & SEARCH MATCH CHECKER ──
         function nodeMatchesSearchAndFilter(n) {
@@ -484,6 +923,7 @@ $imageExists = file_exists($imagePath);
         function applyFilters() {
             renderPins();
             renderTable();
+            renderFovCones();
         }
 
         // ── FETCH NODES ──
@@ -491,7 +931,7 @@ $imageExists = file_exists($imagePath);
             try {
                 const res = await fetch('api/get_nodes.php?blueprint_id=' + BLUEPRINT_ID);
                 const json = await res.json();
-                if (json.success) { nodes = json.data; renderPins(); renderTable(); updateStats(); }
+                if (json.success) { nodes = json.data; renderPins(); renderTable(); updateStats(); renderFovCones(); }
             } catch(e) { showToast('Failed to load nodes: ' + e.message, 'error'); }
         }
 
@@ -527,6 +967,10 @@ $imageExists = file_exists($imagePath);
                 pin.dataset.cableLabel     = node.cable_label || '';
                 pin.dataset.testedBy       = node.tested_by || '';
                 pin.dataset.commissionDate = node.commission_date || '';
+                pin.dataset.fovEnabled     = node.fov_enabled || 0;
+                pin.dataset.fovAngle       = node.fov_angle || 90;
+                pin.dataset.fovDirection   = node.fov_direction || 0;
+                pin.dataset.fovDistance    = node.fov_distance || 15;
                 pin.dataset.posX           = node.pos_x;
                 pin.dataset.posY           = node.pos_y;
                 pin.setAttribute('data-status', node.status);
@@ -541,6 +985,8 @@ $imageExists = file_exists($imagePath);
             } else {
                 pinCountEl.textContent = `${total} pin${total !== 1 ? 's' : ''}`;
             }
+
+            renderFovCones();
         }
 
         // ── FORM LOCK / UNLOCK HELPERS ──
@@ -566,6 +1012,12 @@ $imageExists = file_exists($imagePath);
             document.getElementById('inputCable').disabled = false;
             document.getElementById('inputTestedBy').disabled = false;
             document.getElementById('inputCommissionDate').disabled = false;
+
+            // FoV inputs
+            document.getElementById('inputFovEnabled').disabled = false;
+            document.getElementById('inputFovDirection').disabled = false;
+            document.getElementById('inputFovAngle').disabled = false;
+            document.getElementById('inputFovDistance').disabled = false;
 
             const btnSave = document.getElementById('btnSave');
             btnSave.disabled = false;
@@ -594,6 +1046,12 @@ $imageExists = file_exists($imagePath);
             document.getElementById('inputCable').disabled = true;
             document.getElementById('inputTestedBy').disabled = true;
             document.getElementById('inputCommissionDate').disabled = true;
+
+            // FoV inputs
+            document.getElementById('inputFovEnabled').disabled = true;
+            document.getElementById('inputFovDirection').disabled = true;
+            document.getElementById('inputFovAngle').disabled = true;
+            document.getElementById('inputFovDistance').disabled = true;
 
             const btnSave = document.getElementById('btnSave');
             btnSave.disabled = true;
@@ -626,10 +1084,22 @@ $imageExists = file_exists($imagePath);
             document.getElementById('inputCable').value    = pin.dataset.cableLabel || '';
             document.getElementById('inputTestedBy').value = pin.dataset.testedBy || '';
             document.getElementById('inputCommissionDate').value = pin.dataset.commissionDate || '';
+
+            // FoV parameters
+            const fovOn = parseInt(pin.dataset.fovEnabled || 0) === 1;
+            document.getElementById('inputFovEnabled').checked = fovOn;
+            document.getElementById('inputFovDirection').value = pin.dataset.fovDirection || 0;
+            document.getElementById('inputFovAngle').value     = pin.dataset.fovAngle || 90;
+            document.getElementById('inputFovDistance').value  = pin.dataset.fovDistance || 15;
+            document.getElementById('fovControlsGroup').style.display = fovOn ? 'flex' : 'none';
+            updateFovLabels();
+
             document.getElementById('panelTitle').textContent = pin.dataset.deviceId;
             document.getElementById('panelSubtitle').textContent = 'Editing existing node';
             document.getElementById('btnDelete').style.display = '';
             document.getElementById('btnSave').innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Update Node`;
+
+            renderFovCones();
         }
 
         // ── CLICK MAP ──
@@ -638,6 +1108,8 @@ $imageExists = file_exists($imagePath);
             if (!stage) return;
 
             stage.addEventListener('click', (e) => {
+                if (isDraggingFovHandle) return;
+
                 const rect = stage.getBoundingClientRect();
                 const x = ((e.clientX - rect.left) / rect.width * 100);
                 const y = ((e.clientY - rect.top)  / rect.height * 100);
@@ -663,7 +1135,7 @@ $imageExists = file_exists($imagePath);
                 document.getElementById('coordX').textContent = x.toFixed(1) + '%';
                 document.getElementById('coordY').textContent = y.toFixed(1) + '%';
                 document.getElementById('inputDeviceId').value = '';
-                document.getElementById('inputType').value = 'Generic';
+                document.getElementById('inputType').value = 'Hikvision Dome';
                 document.getElementById('inputIp').value = '';
                 document.getElementById('inputStatus').value = 'Planned';
                 document.getElementById('inputNotes').value = '';
@@ -674,11 +1146,22 @@ $imageExists = file_exists($imagePath);
                 document.getElementById('inputCable').value = '';
                 document.getElementById('inputTestedBy').value = <?= json_encode($_SESSION['full_name'] ?? $_SESSION['username'] ?? '') ?>;
                 document.getElementById('inputCommissionDate').value = new Date().toISOString().split('T')[0];
+
+                // Auto-enable FoV for default camera type
+                document.getElementById('inputFovEnabled').checked = true;
+                document.getElementById('inputFovDirection').value = 0;
+                document.getElementById('inputFovAngle').value     = 90;
+                document.getElementById('inputFovDistance').value  = 15;
+                document.getElementById('fovControlsGroup').style.display = 'flex';
+                updateFovLabels();
+
                 document.getElementById('panelTitle').textContent = 'New Node';
                 document.getElementById('panelSubtitle').textContent = 'Fill in the details and save';
                 document.getElementById('btnDelete').style.display = 'none';
                 document.getElementById('btnSave').innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> Save New Node`;
                 document.getElementById('inputDeviceId').focus();
+
+                renderFovCones();
             });
         }
 
@@ -716,6 +1199,10 @@ $imageExists = file_exists($imagePath);
                 cable_label:     document.getElementById('inputCable').value.trim(),
                 tested_by:       document.getElementById('inputTestedBy').value.trim(),
                 commission_date: document.getElementById('inputCommissionDate').value,
+                fov_enabled:     document.getElementById('inputFovEnabled').checked ? 1 : 0,
+                fov_angle:       parseInt(document.getElementById('inputFovAngle').value) || 90,
+                fov_direction:   parseInt(document.getElementById('inputFovDirection').value) || 0,
+                fov_distance:    parseInt(document.getElementById('inputFovDistance').value) || 15,
             };
 
             try {
@@ -746,7 +1233,7 @@ $imageExists = file_exists($imagePath);
             document.getElementById('coordX').textContent = '—';
             document.getElementById('coordY').textContent = '—';
             document.getElementById('inputDeviceId').value = '';
-            document.getElementById('inputType').value = 'Generic';
+            document.getElementById('inputType').value = 'Hikvision Dome';
             document.getElementById('inputIp').value = '';
             document.getElementById('inputStatus').value = 'Planned';
             document.getElementById('inputNotes').value = '';
@@ -757,11 +1244,21 @@ $imageExists = file_exists($imagePath);
             document.getElementById('inputCable').value = '';
             document.getElementById('inputTestedBy').value = '';
             document.getElementById('inputCommissionDate').value = '';
+
+            // Reset FoV inputs
+            document.getElementById('inputFovEnabled').checked = false;
+            document.getElementById('inputFovDirection').value = 0;
+            document.getElementById('inputFovAngle').value = 90;
+            document.getElementById('inputFovDistance').value = 15;
+            document.getElementById('fovControlsGroup').style.display = 'none';
+            updateFovLabels();
+
             document.getElementById('panelTitle').textContent = 'Node Inspector';
             document.getElementById('panelSubtitle').textContent = 'Click the map to drop a pin';
             document.getElementById('btnDelete').style.display = 'none';
 
             disableFormFields();
+            renderFovCones();
         }
 
         // ── DELETE CURRENT BLUEPRINT (Owner or Admin) ──
