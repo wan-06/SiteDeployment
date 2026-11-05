@@ -81,8 +81,85 @@ $user = getCurrentUser();
         .bp-meta-item { display:flex; align-items:center; gap:4px; font-size:0.78rem; color:var(--text-muted); }
         .bp-meta-item svg { width:14px; height:14px; }
 
-        .bp-card-footer { padding:12px 20px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
-        .bp-card-footer .owner { font-size:0.78rem; color:var(--text-muted); }
+        .bp-card-footer {
+            padding: 12px 18px 14px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #fafaf7;
+        }
+        .bp-footer-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .bp-footer-meta .owner {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .bp-footer-meta .owner strong {
+            color: var(--dark);
+            font-weight: 600;
+        }
+        .bp-footer-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+        .bp-btn-report {
+            flex: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            color: var(--dark);
+            font-weight: 600;
+            font-size: 0.82rem;
+            padding: 7px 12px;
+            border-radius: var(--radius-pill);
+            text-decoration: none;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+        .bp-btn-report:hover {
+            background: var(--lime);
+            border-color: var(--dark);
+            color: var(--dark);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        .bp-btn-share, .bp-btn-delete {
+            padding: 7px 12px;
+            font-size: 0.82rem;
+            border-radius: var(--radius-pill);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+            transition: var(--transition);
+        }
+        .bp-btn-delete {
+            border: 1.5px solid rgba(255, 107, 107, 0.4);
+            color: var(--red);
+            background: transparent;
+        }
+        .bp-btn-delete:hover {
+            background: var(--red);
+            color: #fff;
+            border-color: var(--red);
+        }
 
         .status-dots { display:flex; gap:4px; }
         .status-dot { width:8px; height:8px; border-radius:50%; }
@@ -201,7 +278,7 @@ $user = getCurrentUser();
         <div class="toolbar">
             <div class="search-box">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" id="searchBlueprints" placeholder="Search blueprints by name, description<?= isAdmin() ? ', or owner' : '' ?>...">
+                <input type="text" id="searchBlueprints" placeholder="Search by name, status (Live, Mounted, Cable, Planned), owner...">
             </div>
             <div class="toolbar-right">
                 <button class="btn btn-lime" onclick="openUploadModal()">
@@ -372,15 +449,22 @@ $user = getCurrentUser();
 
         // ── RENDER BLUEPRINT CARDS ──
         function renderBlueprints() {
-            const q = document.getElementById('searchBlueprints').value.toLowerCase();
+            const q = document.getElementById('searchBlueprints').value.toLowerCase().trim();
             let filtered = allBlueprints;
             if (q) {
-                filtered = allBlueprints.filter(b =>
-                    b.name.toLowerCase().includes(q) ||
-                    (b.description||'').toLowerCase().includes(q) ||
-                    (b.owner_username||'').toLowerCase().includes(q) ||
-                    (b.owner_name||'').toLowerCase().includes(q)
-                );
+                filtered = allBlueprints.filter(b => {
+                    const nameMatch = (b.name || '').toLowerCase().includes(q);
+                    const descMatch = (b.description || '').toLowerCase().includes(q);
+                    const ownerMatch = (b.owner_username || '').toLowerCase().includes(q) || (b.owner_name || '').toLowerCase().includes(q);
+
+                    // Match node status (e.g. searching "live", "mounted", "cable", "planned")
+                    const ss = b.status_summary || {};
+                    const statusMatch = Object.keys(ss).some(st =>
+                        st.toLowerCase().includes(q) && parseInt(ss[st]) > 0
+                    );
+
+                    return nameMatch || descMatch || ownerMatch || statusMatch;
+                });
             }
 
             const grid = document.getElementById('blueprintsGrid');
@@ -390,7 +474,7 @@ $user = getCurrentUser();
                     <div class="empty-state" style="grid-column:1/-1;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
                         <h3>${q ? 'No blueprints match your search' : 'No blueprints yet'}</h3>
-                        <p>${q ? 'Try a different search term' : 'Upload your first floorplan to get started'}</p>
+                        <p>${q ? 'Try a different search term (e.g. status "Live", name, or owner)' : 'Upload your first floorplan to get started'}</p>
                         ${q ? '' : '<button class="btn btn-lime" onclick="openUploadModal()">Upload Blueprint</button>'}
                     </div>`;
                 return;
@@ -428,20 +512,25 @@ $user = getCurrentUser();
                         </div>
                     </div>
                     <div class="bp-card-footer" onclick="event.stopPropagation()">
-                        <span class="owner">by ${esc(b.owner_name||b.owner_username)}</span>
-                        <div style="display:flex; gap:6px;">
-                            <a href="handover_report.php?id=${b.id}" target="_blank" class="btn btn-sm btn-ghost" title="View & Print As-Built T&C Report" style="background:#f4f4f0; color:var(--dark); font-weight:600;">
+                        <div class="bp-footer-meta">
+                            <span class="owner">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.6;"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4-4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                by <strong>${esc(b.owner_name||b.owner_username)}</strong>
+                            </span>
+                        </div>
+                        <div class="bp-footer-actions">
+                            <a href="handover_report.php?id=${b.id}" target="_blank" class="bp-btn-report" title="View & Print T&C As-Built Handover Report">
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                                Report
+                                <span>T&amp;C Report</span>
                             </a>
                             ${IS_ADMIN || b.uploaded_by == CURRENT_USER.id ? `
-                                <button class="btn btn-sm btn-ghost" onclick="openAccessModal(${b.id}, '${escAttr(b.name)}')" title="Manage Access">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                                    Share
+                                <button class="btn btn-sm btn-ghost bp-btn-share" onclick="openAccessModal(${b.id}, '${escAttr(b.name)}')" title="Manage Access">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                                    <span>Share</span>
                                 </button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteBlueprint(${b.id}, '${escAttr(b.name)}')" title="Delete Blueprint">
+                                <button class="btn btn-sm bp-btn-delete" onclick="deleteBlueprint(${b.id}, '${escAttr(b.name)}')" title="Delete Blueprint">
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-                                    Delete
+                                    <span>Delete</span>
                                 </button>
                             ` : ''}
                         </div>

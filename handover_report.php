@@ -525,7 +525,12 @@ $imagePath = 'uploads/blueprints/' . htmlspecialchars($blueprint['image_filename
                         ?>
                             <tr>
                                 <td style="font-weight:700; color:#6B7280; text-align:center;"><?= $rowIdx ?></td>
-                                <td><span class="tag-badge"><?= htmlspecialchars($n['device_id']) ?></span></td>
+                                <td>
+                                    <span class="tag-badge"><?= htmlspecialchars($n['device_id']) ?></span>
+                                    <?php if (!empty($n['notes'])): ?>
+                                        <div style="font-size:0.68rem; color:#6B7280; margin-top:3px; max-width:140px; line-height:1.2;"><?= htmlspecialchars($n['notes']) ?></div>
+                                    <?php endif; ?>
+                                </td>
                                 <td><strong><?= htmlspecialchars($n['type']) ?></strong></td>
                                 <td class="mono-text"><?= htmlspecialchars($n['serial_number'] ?: '—') ?></td>
                                 <td>
@@ -610,3 +615,4 @@ $imagePath = 'uploads/blueprints/' . htmlspecialchars($blueprint['image_filename
 
 </body>
 </html>
+

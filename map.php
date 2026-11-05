@@ -70,8 +70,14 @@ $imageExists = file_exists($imagePath);
 
         /* ── STATS ── */
         .stats-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; padding:16px 40px; }
-        .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px; display:flex; flex-direction:column; gap:2px; }
-        .stat-label { font-size:0.75rem; color:var(--text-muted); font-weight:500; text-transform:uppercase; letter-spacing:0.5px; }
+        .stat-card {
+            background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+            padding:16px 20px; display:flex; flex-direction:column; gap:2px; cursor:pointer; transition:var(--transition);
+            user-select:none;
+        }
+        .stat-card:hover { transform:translateY(-2px); box-shadow:var(--shadow); border-color:var(--dark); }
+        .stat-card.active { border-color:var(--dark); background:#f4f4f0; box-shadow:0 0 0 2px var(--lime); }
+        .stat-label { font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
         .stat-value { font-size:1.6rem; font-weight:700; }
         .stat-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:4px; }
 
@@ -80,12 +86,26 @@ $imageExists = file_exists($imagePath);
 
         /* ── MAP CONTAINER ── */
         .map-container { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; display:flex; flex-direction:column; }
-        .map-toolbar { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; border-bottom:1px solid var(--border); flex-wrap:wrap; gap:8px; }
-        .map-toolbar-left { display:flex; align-items:center; gap:10px; }
+        .map-toolbar { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; border-bottom:1px solid var(--border); flex-wrap:wrap; gap:10px; }
+        .map-toolbar-left { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
         .filter-pills { display:flex; gap:4px; flex-wrap:wrap; }
-        .filter-pill { padding:4px 12px; border-radius:var(--radius-pill); border:1px solid var(--border); background:var(--surface); font-family:var(--font); font-size:0.75rem; font-weight:500; cursor:pointer; transition:var(--transition); color:var(--text-muted); }
+        .filter-pill { padding:5px 14px; border-radius:var(--radius-pill); border:1px solid var(--border); background:var(--surface); font-family:var(--font); font-size:0.75rem; font-weight:600; cursor:pointer; transition:var(--transition); color:var(--text-muted); }
         .filter-pill:hover { border-color:var(--dark); color:var(--text); }
         .filter-pill.active { background:var(--dark); color:var(--text-on-dark); border-color:var(--dark); }
+
+        .blueprint-search-box {
+            display:inline-flex; align-items:center; gap:6px; background:var(--bg);
+            border:1px solid var(--border); border-radius:var(--radius-pill);
+            padding:5px 14px; min-width:250px; transition:var(--transition);
+        }
+        .blueprint-search-box:focus-within {
+            border-color:var(--dark); background:var(--surface);
+            box-shadow:0 0 0 2px rgba(185,255,102,0.4);
+        }
+        .blueprint-search-box svg { width:14px; height:14px; opacity:0.5; flex-shrink:0; }
+        .blueprint-search-box input { border:none; background:none; outline:none; font-family:var(--font); font-size:0.8rem; color:var(--text); width:100%; }
+        .search-clear-btn { border:none; background:none; cursor:pointer; font-size:0.75rem; color:var(--text-muted); padding:0 2px; line-height:1; }
+        .search-clear-btn:hover { color:var(--dark); }
 
         .blueprint-area {
             position:relative; flex:1; min-height:500px; background:#121319;
@@ -258,11 +278,11 @@ $imageExists = file_exists($imagePath);
 
     <!-- ═══ STATS ═══ -->
     <div class="stats-row">
-        <div class="stat-card"><span class="stat-label">Total Nodes</span><span class="stat-value" id="statTotal">0</span></div>
-        <div class="stat-card"><span class="stat-label"><span class="stat-dot" style="background:#22c55e"></span>Live</span><span class="stat-value" id="statLive">0</span></div>
-        <div class="stat-card"><span class="stat-label"><span class="stat-dot" style="background:#f59e0b"></span>Mounted</span><span class="stat-value" id="statMounted">0</span></div>
-        <div class="stat-card"><span class="stat-label"><span class="stat-dot" style="background:#3b82f6"></span>Cable</span><span class="stat-value" id="statCable">0</span></div>
-        <div class="stat-card"><span class="stat-label"><span class="stat-dot" style="background:#ef4444"></span>Planned</span><span class="stat-value" id="statPlanned">0</span></div>
+        <div class="stat-card active" data-filter="all" title="Click to show all nodes"><span class="stat-label">Total Nodes</span><span class="stat-value" id="statTotal">0</span></div>
+        <div class="stat-card" data-filter="Live" title="Click to filter Live nodes"><span class="stat-label"><span class="stat-dot" style="background:#22c55e"></span>Live</span><span class="stat-value" id="statLive">0</span></div>
+        <div class="stat-card" data-filter="Hardware Mounted" title="Click to filter Mounted nodes"><span class="stat-label"><span class="stat-dot" style="background:#f59e0b"></span>Mounted</span><span class="stat-value" id="statMounted">0</span></div>
+        <div class="stat-card" data-filter="Cable Pulled" title="Click to filter Cable Pulled nodes"><span class="stat-label"><span class="stat-dot" style="background:#3b82f6"></span>Cable</span><span class="stat-value" id="statCable">0</span></div>
+        <div class="stat-card" data-filter="Planned" title="Click to filter Planned nodes"><span class="stat-label"><span class="stat-dot" style="background:#ef4444"></span>Planned</span><span class="stat-value" id="statPlanned">0</span></div>
     </div>
 
     <!-- ═══ MAP + SIDE PANEL ═══ -->
@@ -270,7 +290,7 @@ $imageExists = file_exists($imagePath);
         <div class="map-container">
             <div class="map-toolbar">
                 <div class="map-toolbar-left">
-                    <span style="font-weight:600;font-size:0.85rem;">Floorplan</span>
+                    <span style="font-weight:700;font-size:0.88rem;">Floorplan</span>
                     <div class="filter-pills">
                         <button class="filter-pill active" data-filter="all">All</button>
                         <button class="filter-pill" data-filter="Live">Live</button>
@@ -278,8 +298,13 @@ $imageExists = file_exists($imagePath);
                         <button class="filter-pill" data-filter="Cable Pulled">Cable</button>
                         <button class="filter-pill" data-filter="Planned">Planned</button>
                     </div>
+                    <div class="blueprint-search-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input type="text" id="mapSearchInput" placeholder="Search status, notes, tag, IP..." autocomplete="off">
+                        <button id="mapSearchClear" type="button" class="search-clear-btn" style="display:none;" title="Clear search">✕</button>
+                    </div>
                 </div>
-                <span style="font-size:0.75rem;color:var(--text-muted);" id="pinCount">0 pins</span>
+                <span style="font-size:0.75rem;color:var(--text-muted);font-weight:600;" id="pinCount">0 pins</span>
             </div>
             <div class="blueprint-area" id="blueprintArea">
                 <?php if ($imageExists): ?>
@@ -376,7 +401,7 @@ $imageExists = file_exists($imagePath);
             <div class="table-toolbar">
                 <div class="search-box">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <input type="text" id="searchInput" placeholder="Search by device, type, IP...">
+                    <input type="text" id="searchInput" placeholder="Search by status (Live, Mounted...), notes, device, IP...">
                 </div>
                 <span style="font-size:0.78rem;color:var(--text-muted);" id="tableCount">0 nodes</span>
             </div>
@@ -391,12 +416,13 @@ $imageExists = file_exists($imagePath);
                             <th>Cable Tag</th>
                             <th>Serial Number</th>
                             <th>Status</th>
+                            <th>Site Notes</th>
                             <th>Tested By</th>
                             <th>Date</th>
                             <th>Position</th>
                         </tr>
                     </thead>
-                    <tbody id="nodeTableBody"><tr><td colspan="10" style="text-align:center;padding:40px;">Loading...</td></tr></tbody>
+                    <tbody id="nodeTableBody"><tr><td colspan="11" style="text-align:center;padding:40px;">Loading...</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -415,6 +441,7 @@ $imageExists = file_exists($imagePath);
         let selectedPin = null;
         let currentPosX = null, currentPosY = null;
         let activeFilter = 'all';
+        let currentSearchQuery = '';
         let isNewPin = false;
 
         const PIN_SVG = `<svg viewBox="0 0 32 40" fill="none"><path d="M16 0C7.2 0 0 7.2 0 16c0 12 16 24 16 24s16-12 16-24C32 7.2 24.8 0 16 0z" fill="#ef4444"/><circle cx="16" cy="15" r="7" fill="white" opacity="0.9"/><circle cx="16" cy="15" r="3" fill="#ef4444"/></svg>`;
@@ -423,8 +450,41 @@ $imageExists = file_exists($imagePath);
             fetchNodes();
             if (IMAGE_EXISTS) setupBlueprintClick();
             setupFilters();
-            document.getElementById('searchInput').addEventListener('input', renderTable);
         });
+
+        // ── FILTER & SEARCH MATCH CHECKER ──
+        function nodeMatchesSearchAndFilter(n) {
+            // 1. Status Filter Pill (activeFilter)
+            if (activeFilter !== 'all' && n.status !== activeFilter) {
+                return false;
+            }
+
+            // 2. Search query (matches status, notes, device_id, type, ip, mac, serial, switch, port, cable, tested_by)
+            if (currentSearchQuery) {
+                const q = currentSearchQuery.toLowerCase();
+                const matches =
+                    (n.status || '').toLowerCase().includes(q) ||
+                    (n.notes || '').toLowerCase().includes(q) ||
+                    (n.device_id || '').toLowerCase().includes(q) ||
+                    (n.type || '').toLowerCase().includes(q) ||
+                    (n.ip_address || '').toLowerCase().includes(q) ||
+                    (n.mac_address || '').toLowerCase().includes(q) ||
+                    (n.serial_number || '').toLowerCase().includes(q) ||
+                    (n.switch_id || '').toLowerCase().includes(q) ||
+                    (n.port_no || '').toLowerCase().includes(q) ||
+                    (n.cable_label || '').toLowerCase().includes(q) ||
+                    (n.tested_by || '').toLowerCase().includes(q);
+
+                if (!matches) return false;
+            }
+
+            return true;
+        }
+
+        function applyFilters() {
+            renderPins();
+            renderTable();
+        }
 
         // ── FETCH NODES ──
         async function fetchNodes() {
@@ -442,13 +502,19 @@ $imageExists = file_exists($imagePath);
             const stage = document.getElementById('blueprintStage');
             if (!stage) return;
 
+            let visibleCount = 0;
+
             nodes.forEach(node => {
-                if (activeFilter !== 'all' && node.status !== activeFilter) return;
+                if (!nodeMatchesSearchAndFilter(node)) return;
+                visibleCount++;
+
                 const pin = document.createElement('div');
                 pin.className = 'pin';
                 pin.innerHTML = PIN_SVG + `<span class="pin-label">${esc(node.device_id)}</span>`;
                 pin.style.left = node.pos_x + '%';
                 pin.style.top  = node.pos_y + '%';
+                pin.title = `${node.device_id} [${node.status}] - ${node.type}${node.notes ? '\nNotes: ' + node.notes : ''}${node.ip_address ? '\nIP: ' + node.ip_address : ''}${node.cable_label ? '\nCable: ' + node.cable_label : ''}`;
+
                 pin.dataset.deviceId       = node.device_id;
                 pin.dataset.type           = node.type;
                 pin.dataset.ip             = node.ip_address || '';
@@ -468,8 +534,13 @@ $imageExists = file_exists($imagePath);
                 stage.appendChild(pin);
             });
 
-            const c = document.querySelectorAll('.pin').length;
-            document.getElementById('pinCount').textContent = c + ' pin' + (c !== 1 ? 's' : '');
+            const total = nodes.length;
+            const pinCountEl = document.getElementById('pinCount');
+            if (activeFilter !== 'all' || currentSearchQuery) {
+                pinCountEl.textContent = `Showing ${visibleCount} of ${total} pin${total !== 1 ? 's' : ''}`;
+            } else {
+                pinCountEl.textContent = `${total} pin${total !== 1 ? 's' : ''}`;
+            }
         }
 
         // ── FORM LOCK / UNLOCK HELPERS ──
@@ -716,25 +787,23 @@ $imageExists = file_exists($imagePath);
 
         // ── TABLE ──
         function renderTable() {
-            const q = document.getElementById('searchInput').value.toLowerCase();
-            let f = nodes;
-            if (q) {
-                f = nodes.filter(n =>
-                    (n.device_id || '').toLowerCase().includes(q) ||
-                    (n.type || '').toLowerCase().includes(q) ||
-                    (n.ip_address || '').toLowerCase().includes(q) ||
-                    (n.mac_address || '').toLowerCase().includes(q) ||
-                    (n.serial_number || '').toLowerCase().includes(q) ||
-                    (n.switch_id || '').toLowerCase().includes(q) ||
-                    (n.port_no || '').toLowerCase().includes(q) ||
-                    (n.cable_label || '').toLowerCase().includes(q) ||
-                    (n.tested_by || '').toLowerCase().includes(q) ||
-                    (n.notes || '').toLowerCase().includes(q)
-                );
+            const f = nodes.filter(nodeMatchesSearchAndFilter);
+            const total = nodes.length;
+            const tableCountEl = document.getElementById('tableCount');
+            if (activeFilter !== 'all' || currentSearchQuery) {
+                tableCountEl.textContent = `Showing ${f.length} of ${total} node${total !== 1 ? 's' : ''}`;
+            } else {
+                tableCountEl.textContent = `${total} node${total !== 1 ? 's' : ''}`;
             }
-            document.getElementById('tableCount').textContent = f.length + ' node' + (f.length!==1?'s':'');
+
             const tb = document.getElementById('nodeTableBody');
-            if (!f.length) { tb.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--text-muted);">No commissioning nodes found</td></tr>'; return; }
+            if (!f.length) {
+                tb.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--text-muted);">
+                    No commissioning nodes match your filter ${currentSearchQuery ? `("${esc(currentSearchQuery)}")` : ''}
+                </td></tr>`;
+                return;
+            }
+
             tb.innerHTML = f.map(n => `
                 <tr onclick="scrollToPin('${escAttr(n.device_id)}')">
                     <td><strong>${esc(n.device_id)}</strong></td>
@@ -747,6 +816,9 @@ $imageExists = file_exists($imagePath);
                     <td>${n.cable_label ? `<span class="tag-mono" style="background:#eef2ff;color:#4338ca;">${esc(n.cable_label)}</span>` : '—'}</td>
                     <td>${n.serial_number ? `<span class="tag-mono">${esc(n.serial_number)}</span>` : '—'}</td>
                     <td><span class="status-badge ${statusClass(n.status)}">${esc(n.status)}</span></td>
+                    <td style="max-width:200px;font-size:0.8rem;color:var(--text);white-space:normal;">
+                        ${n.notes ? `<div style="line-height:1.35;word-break:break-word;">${esc(n.notes)}</div>` : '<span style="color:var(--text-muted);">—</span>'}
+                    </td>
                     <td style="font-size:0.8rem;color:var(--text-muted);">${esc(n.tested_by||'—')}</td>
                     <td style="font-size:0.8rem;color:var(--text-muted);">${esc(n.commission_date||'—')}</td>
                     <td style="font-size:0.78rem;color:var(--text-muted);">${parseFloat(n.pos_x).toFixed(1)}%, ${parseFloat(n.pos_y).toFixed(1)}%</td>
@@ -768,16 +840,63 @@ $imageExists = file_exists($imagePath);
             document.getElementById('statPlanned').textContent  = nodes.filter(n=>n.status==='Planned').length;
         }
 
-        // ── FILTERS ──
+        // ── FILTERS & SEARCH SETUP ──
         function setupFilters() {
+            // 1. Filter Pills above Blueprint
             document.querySelectorAll('.filter-pill').forEach(p => {
                 p.addEventListener('click', () => {
                     document.querySelectorAll('.filter-pill').forEach(x => x.classList.remove('active'));
                     p.classList.add('active');
                     activeFilter = p.dataset.filter;
-                    renderPins();
+
+                    // Sync stat card highlight
+                    document.querySelectorAll('.stat-card').forEach(sc => {
+                        sc.classList.toggle('active', sc.dataset.filter === activeFilter);
+                    });
+
+                    applyFilters();
                 });
             });
+
+            // 2. Clickable Stat Cards (Quick Filter by Status)
+            document.querySelectorAll('.stat-card').forEach(sc => {
+                sc.addEventListener('click', () => {
+                    const f = sc.dataset.filter || 'all';
+                    activeFilter = f;
+
+                    document.querySelectorAll('.filter-pill').forEach(p => {
+                        p.classList.toggle('active', p.dataset.filter === f);
+                    });
+                    document.querySelectorAll('.stat-card').forEach(c => {
+                        c.classList.toggle('active', c.dataset.filter === f);
+                    });
+
+                    applyFilters();
+                });
+            });
+
+            // 3. Search inputs synchronization (map toolbar + table toolbar)
+            const mapSearch   = document.getElementById('mapSearchInput');
+            const mapClear    = document.getElementById('mapSearchClear');
+            const tableSearch = document.getElementById('searchInput');
+
+            function handleSearchInput(val) {
+                currentSearchQuery = (val || '').trim();
+                if (mapSearch && mapSearch.value !== val) mapSearch.value = val;
+                if (tableSearch && tableSearch.value !== val) tableSearch.value = val;
+                if (mapClear) mapClear.style.display = currentSearchQuery ? 'inline-block' : 'none';
+                applyFilters();
+            }
+
+            if (mapSearch) {
+                mapSearch.addEventListener('input', (e) => handleSearchInput(e.target.value));
+            }
+            if (mapClear) {
+                mapClear.addEventListener('click', () => handleSearchInput(''));
+            }
+            if (tableSearch) {
+                tableSearch.addEventListener('input', (e) => handleSearchInput(e.target.value));
+            }
         }
 
         // ── TOAST ──
