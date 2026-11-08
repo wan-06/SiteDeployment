@@ -20,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $name        = trim($_POST['name'] ?? '');
 $description = trim($_POST['description'] ?? '');
+$projectId   = !empty($_POST['project_id']) ? intval($_POST['project_id']) : null;
 
 if (!$name) {
     http_response_code(400);
@@ -75,10 +76,10 @@ $imgHeight = $imgSize[1] ?? 0;
 
 try {
     $stmt = $pdo->prepare("
-        INSERT INTO blueprints (name, description, image_filename, image_width, image_height, uploaded_by)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO blueprints (project_id, name, description, image_filename, image_width, image_height, uploaded_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
     ");
-    $stmt->execute([$name, $description, $filename, $imgWidth, $imgHeight, $user['id']]);
+    $stmt->execute([$projectId, $name, $description, $filename, $imgWidth, $imgHeight, $user['id']]);
 
     $blueprintId = $pdo->lastInsertId();
 

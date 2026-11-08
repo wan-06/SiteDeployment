@@ -14,23 +14,36 @@ $user = getCurrentUser();
 
 // ─── GET: List blueprints ───
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $search = trim($_GET['q'] ?? '');
+    $search    = trim($_GET['q'] ?? '');
+    $projectId = $_GET['project_id'] ?? null;
 
     try {
         if ($user['role'] === 'admin') {
             // Admin sees ALL blueprints
             $sql = "
                 SELECT b.*, u.username AS owner_username, u.full_name AS owner_name,
+                       p.name AS project_name, p.client_name, p.code AS project_code, p.status AS project_status,
                        (SELECT COUNT(*) FROM nodes n WHERE n.blueprint_id = b.id) AS node_count
                 FROM blueprints b
                 JOIN users u ON u.id = b.uploaded_by
+                LEFT JOIN projects p ON p.id = b.project_id
+                WHERE 1=1
             ";
             $params = [];
 
+            if ($projectId !== null && $projectId !== '') {
+                if ($projectId === 'unassigned' || $projectId === '0') {
+                    $sql .= " AND b.project_id IS NULL";
+                } else {
+                    $sql .= " AND b.project_id = ?";
+                    $params[] = intval($projectId);
+                }
+            }
+
             if ($search) {
-                $sql .= " WHERE b.name LIKE ? OR b.description LIKE ? OR u.username LIKE ? OR u.full_name LIKE ?";
+                $sql .= " AND (b.name LIKE ? OR b.description LIKE ? OR u.username LIKE ? OR u.full_name LIKE ? OR p.name LIKE ? OR p.client_name LIKE ? OR p.code LIKE ?)";
                 $like = "%{$search}%";
-                $params = [$like, $like, $like, $like];
+                $params = array_merge($params, [$like, $like, $like, $like, $like, $like, $like]);
             }
 
             $sql .= " ORDER BY b.updated_at DESC";
@@ -38,16 +51,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             // User sees own + assigned blueprints
             $sql = "
                 SELECT b.*, u.username AS owner_username, u.full_name AS owner_name,
+                       p.name AS project_name, p.client_name, p.code AS project_code, p.status AS project_status,
                        (SELECT COUNT(*) FROM nodes n WHERE n.blueprint_id = b.id) AS node_count
                 FROM blueprints b
                 JOIN users u ON u.id = b.uploaded_by
+                LEFT JOIN projects p ON p.id = b.project_id
                 WHERE (b.uploaded_by = ? OR b.id IN (SELECT blueprint_id FROM blueprint_access WHERE user_id = ?))
             ";
             $params = [$user['id'], $user['id']];
 
+            if ($projectId !== null && $projectId !== '') {
+                if ($projectId === 'unassigned' || $projectId === '0') {
+                    $sql .= " AND b.project_id IS NULL";
+                } else {
+                    $sql .= " AND b.project_id = ?";
+                    $params[] = intval($projectId);
+                }
+            }
+
             if ($search) {
-                $sql .= " AND (b.name LIKE ? OR b.description LIKE ?)";
+                $sql .= " AND (b.name LIKE ? OR b.description LIKE ? OR p.name LIKE ? OR p.client_name LIKE ? OR p.code LIKE ?)";
                 $like = "%{$search}%";
+                $params[] = $like;
+                $params[] = $like;
+                $params[] = $like;
                 $params[] = $like;
                 $params[] = $like;
             }

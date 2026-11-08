@@ -26,10 +26,27 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB;
 
 -- =============================================
+-- PROJECTS / CLIENT FOLDERS
+-- =============================================
+CREATE TABLE `projects` (
+  `id`           INT AUTO_INCREMENT PRIMARY KEY,
+  `client_name`  VARCHAR(150) NOT NULL,
+  `name`         VARCHAR(150) NOT NULL,
+  `code`         VARCHAR(50)  NOT NULL UNIQUE,
+  `description`  TEXT,
+  `status`       VARCHAR(50)  NOT NULL DEFAULT 'Active',
+  `created_by`   INT DEFAULT NULL,
+  `created_at`   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`created_by`) REFERENCES `users`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- =============================================
 -- BLUEPRINTS
 -- =============================================
 CREATE TABLE `blueprints` (
   `id`             INT AUTO_INCREMENT PRIMARY KEY,
+  `project_id`     INT DEFAULT NULL,
   `name`           VARCHAR(150) NOT NULL,
   `description`    TEXT,
   `image_filename` VARCHAR(255) NOT NULL,
@@ -38,7 +55,8 @@ CREATE TABLE `blueprints` (
   `uploaded_by`    INT NOT NULL,
   `created_at`     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (`uploaded_by`) REFERENCES `users`(`id`) ON DELETE CASCADE
+  FOREIGN KEY (`project_id`)  REFERENCES `projects`(`id`) ON DELETE SET NULL,
+  FOREIGN KEY (`uploaded_by`) REFERENCES `users`(`id`)    ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- =============================================

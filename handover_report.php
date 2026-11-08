@@ -19,9 +19,11 @@ if (!hasAccessToBlueprint($pdo, $blueprintId, $user['id'], $user['role'])) {
 
 // Fetch blueprint details
 $bpStmt = $pdo->prepare("
-    SELECT b.*, u.full_name AS owner_name, u.email AS owner_email 
+    SELECT b.*, u.full_name AS owner_name, u.email AS owner_email,
+           p.id AS project_id, p.name AS project_name, p.client_name, p.code AS project_code, p.status AS project_status
     FROM blueprints b 
     JOIN users u ON u.id = b.uploaded_by 
+    LEFT JOIN projects p ON p.id = b.project_id
     WHERE b.id = ?
 ");
 $bpStmt->execute([$blueprintId]);
@@ -555,7 +557,15 @@ $imagePath = 'uploads/blueprints/' . htmlspecialchars($blueprint['image_filename
             <div>
                 <h2>TESTING &amp; COMMISSIONING (T&amp;C) &amp; AS-BUILT HANDOVER REPORT</h2>
                 <div class="doc-meta-grid">
-                    <span class="doc-meta-label">Project / Site:</span>
+                    <?php if (!empty($blueprint['client_name'])): ?>
+                    <span class="doc-meta-label">Client / Owner:</span>
+                    <span class="doc-meta-value"><strong><?= htmlspecialchars($blueprint['client_name']) ?></strong></span>
+
+                    <span class="doc-meta-label">Project Code:</span>
+                    <span class="doc-meta-value"><span class="mono-text" style="font-weight:700; background:#E5E7EB; padding:2px 6px; border-radius:4px;"><?= htmlspecialchars($blueprint['project_code']) ?></span> <?= htmlspecialchars($blueprint['project_name']) ?></span>
+                    <?php endif; ?>
+
+                    <span class="doc-meta-label">Site / Drawing:</span>
                     <span class="doc-meta-value"><strong><?= htmlspecialchars($blueprint['name']) ?></strong></span>
 
                     <span class="doc-meta-label">Report Ref:</span>
@@ -822,7 +832,7 @@ $imagePath = 'uploads/blueprints/' . htmlspecialchars($blueprint['image_filename
                 <div class="sign-box">
                     <div class="sign-box-role">Accepted By (Client / Owner)</div>
                     <div>
-                        <div class="sign-meta-field">Client: _____________________________</div>
+                        <div class="sign-meta-field">Client: <strong><?= htmlspecialchars($blueprint['client_name'] ?: '_____________________________') ?></strong></div>
                         <div class="sign-meta-field">Representative: _____________________</div>
                     </div>
                     <div>

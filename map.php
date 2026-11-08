@@ -16,7 +16,14 @@ if (!hasAccessToBlueprint($pdo, $blueprintId, $user['id'], $user['role'])) {
 }
 
 // ── Load blueprint data ──
-$stmt = $pdo->prepare("SELECT b.*, u.full_name AS owner_name FROM blueprints b JOIN users u ON u.id = b.uploaded_by WHERE b.id = ?");
+$stmt = $pdo->prepare("
+    SELECT b.*, u.full_name AS owner_name,
+           p.id AS project_id, p.name AS project_name, p.client_name, p.code AS project_code, p.status AS project_status
+    FROM blueprints b 
+    JOIN users u ON u.id = b.uploaded_by 
+    LEFT JOIN projects p ON p.id = b.project_id
+    WHERE b.id = ?
+");
 $stmt->execute([$blueprintId]);
 $blueprint = $stmt->fetch();
 
@@ -54,7 +61,12 @@ $imageExists = file_exists($imagePath);
         .navbar-brand svg { width:28px; height:28px; }
         .back-btn { display:flex; align-items:center; gap:6px; padding:6px 14px; border-radius:var(--radius-pill); font-size:0.82rem; font-weight:500; color:var(--text-muted); text-decoration:none; border:1px solid var(--border); transition:var(--transition); }
         .back-btn:hover { background:var(--bg); color:var(--text); }
-        .bp-title { font-weight:700; font-size:1rem; }
+        .nav-project-crumb { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:var(--radius-pill); background:var(--bg); border:1px solid var(--border); text-decoration:none; color:var(--text); font-size:0.82rem; font-weight:600; transition:var(--transition); max-width:260px; }
+        .nav-project-crumb:hover { background:var(--dark); color:#fff; border-color:var(--dark); }
+        .nav-project-crumb .proj-code-pill { background:var(--lime); color:var(--dark); font-size:0.68rem; font-weight:700; padding:1px 6px; border-radius:4px; flex-shrink:0; }
+        .nav-project-crumb .proj-client-text { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .breadcrumb-sep { color:var(--border); font-size:0.85rem; user-select:none; }
+        .bp-title { font-weight:700; font-size:1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:320px; }
         .navbar-right { display:flex; align-items:center; gap:12px; }
         .user-badge { display:flex; align-items:center; gap:8px; padding:6px 16px; background:var(--bg); border-radius:var(--radius-pill); font-size:0.82rem; font-weight:500; }
         .user-badge .role-tag { background:var(--dark); color:var(--text-on-dark); padding:2px 8px; border-radius:var(--radius-pill); font-size:0.7rem; font-weight:600; text-transform:uppercase; }
@@ -164,6 +176,18 @@ $imageExists = file_exists($imagePath);
 
         .panel-footer { padding:16px 24px; border-top:1px solid rgba(255,255,255,0.08); display:flex; flex-direction:column; gap:8px; }
         .panel-footer .btn { width:100%; justify-content:center; }
+        .panel-close-btn {
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.7); width: 28px; height: 28px; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: bold; transition: var(--transition); flex-shrink: 0;
+        }
+        .panel-close-btn:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
+        .btn-secondary {
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.85); font-weight: 600;
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.18); color: #fff; border-color: rgba(255,255,255,0.4); }
 
         /* ── PIN-FIRST NOTICE ── */
         .pin-first-notice {
@@ -499,10 +523,18 @@ $imageExists = file_exists($imagePath);
                 <svg viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="6" fill="#191A23"/><path d="M7 14h14M14 7v14M9 9l10 10M19 9L9 19" stroke="#B9FF66" stroke-width="2" stroke-linecap="round"/></svg>
                 SiteDeploy
             </a>
-            <a class="back-btn" href="dashboard.php">
+            <a class="back-btn" href="dashboard.php<?= !empty($blueprint['project_id']) ? '?project=' . $blueprint['project_id'] : '' ?>">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
                 Dashboard
             </a>
+            <span class="breadcrumb-sep">/</span>
+            <?php if (!empty($blueprint['client_name'])): ?>
+                <a href="dashboard.php?project=<?= $blueprint['project_id'] ?>" class="nav-project-crumb" title="Project: <?= htmlspecialchars($blueprint['project_name']) ?>">
+                    <span class="proj-code-pill"><?= htmlspecialchars($blueprint['project_code']) ?></span>
+                    <span class="proj-client-text"><?= htmlspecialchars($blueprint['client_name']) ?></span>
+                </a>
+                <span class="breadcrumb-sep">/</span>
+            <?php endif; ?>
             <span class="bp-title"><?= htmlspecialchars($blueprint['name']) ?></span>
         </div>
         <div class="navbar-right">
@@ -577,9 +609,12 @@ $imageExists = file_exists($imagePath);
         </div>
 
         <div class="side-panel">
-            <div class="panel-header">
-                <h3 id="panelTitle">Node Inspector</h3>
-                <p id="panelSubtitle">Click the map to drop a pin</p>
+            <div class="panel-header" style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+                <div>
+                    <h3 id="panelTitle">Node Inspector</h3>
+                    <p id="panelSubtitle">Click the map to drop a pin</p>
+                </div>
+                <button type="button" id="btnPanelClose" class="panel-close-btn" onclick="resetPanel()" title="Cancel / Clear selection" style="display:none;">✕</button>
             </div>
             <div class="panel-body">
                 <!-- Pin-first notice: shown when no pin is placed yet -->
@@ -738,10 +773,15 @@ $imageExists = file_exists($imagePath);
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                     Pin a location first
                 </button>
-                <button class="btn btn-danger btn-sm" id="btnDelete" onclick="deleteNode()" style="display:none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-                    Delete Node
-                </button>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" class="btn btn-secondary btn-sm" id="btnCancelPin" onclick="resetPanel()" style="display:none; flex:1;">
+                        Cancel
+                    </button>
+                    <button class="btn btn-danger btn-sm" id="btnDelete" onclick="deleteNode()" style="display:none; flex:1;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                        Delete Node
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -937,16 +977,20 @@ $imageExists = file_exists($imagePath);
                 drawSingleFovCone(svg, cx, cy, r, dir, angle, colors, isSelected, vw, vh);
             });
 
-            // If placing a new pin with FoV enabled
-            if (isNewPin && currentPosX !== null && currentPosY !== null && document.getElementById('inputFovEnabled').checked) {
-                const cx = (currentPosX / 100) * vw;
-                const cy = (currentPosY / 100) * vh;
-                const dir   = parseInt(document.getElementById('inputFovDirection').value) || 0;
-                const angle = parseInt(document.getElementById('inputFovAngle').value) || 90;
-                const dist  = parseInt(document.getElementById('inputFovDistance').value) || 15;
-                const r = (dist / 100) * vw;
-                const colors = { fill: 'rgba(185, 255, 102, 0.35)', stroke: '#B9FF66' };
-                drawSingleFovCone(svg, cx, cy, r, dir, angle, colors, true, vw, vh);
+            // If placing a new pin with FoV enabled (only if temp pin is present on stage and matches active filter)
+            const tempPinEl = document.querySelector('.pin.temp-pin');
+            if (isNewPin && tempPinEl && currentPosX !== null && currentPosY !== null && document.getElementById('inputFovEnabled').checked) {
+                const curStatus = document.getElementById('inputStatus').value || 'Planned';
+                if (activeFilter === 'all' || activeFilter === curStatus) {
+                    const cx = (currentPosX / 100) * vw;
+                    const cy = (currentPosY / 100) * vh;
+                    const dir   = parseInt(document.getElementById('inputFovDirection').value) || 0;
+                    const angle = parseInt(document.getElementById('inputFovAngle').value) || 90;
+                    const dist  = parseInt(document.getElementById('inputFovDistance').value) || 15;
+                    const r = (dist / 100) * vw;
+                    const colors = getFovColors(curStatus, true);
+                    drawSingleFovCone(svg, cx, cy, r, dir, angle, colors, true, vw, vh);
+                }
             }
         }
 
@@ -1123,6 +1167,18 @@ $imageExists = file_exists($imagePath);
                     }
                 });
             }
+
+            // Dynamically update pin and FoV cone color when status changes
+            const statusSelect = document.getElementById('inputStatus');
+            if (statusSelect) {
+                statusSelect.addEventListener('change', () => {
+                    if (selectedPin) {
+                        selectedPin.setAttribute('data-status', statusSelect.value);
+                        selectedPin.dataset.status = statusSelect.value;
+                    }
+                    renderFovCones();
+                });
+            }
         }
 
         // ── FILTER & SEARCH MATCH CHECKER ──
@@ -1172,6 +1228,16 @@ $imageExists = file_exists($imagePath);
         // ── RENDER PINS ──
         function renderPins() {
             document.querySelectorAll('.pin').forEach(p => p.remove());
+            if (isNewPin) {
+                isNewPin = false;
+                currentPosX = null;
+                currentPosY = null;
+                disableFormFields();
+                const cancelBtn = document.getElementById('btnCancelPin');
+                if (cancelBtn) cancelBtn.style.display = 'none';
+                const closeBtn = document.getElementById('btnPanelClose');
+                if (closeBtn) closeBtn.style.display = 'none';
+            }
             if (!IMAGE_EXISTS) return;
             const stage = document.getElementById('blueprintStage');
             if (!stage) return;
@@ -1296,6 +1362,7 @@ $imageExists = file_exists($imagePath);
         // ── SELECT PIN ──
         function selectPin(pin) {
             document.querySelectorAll('.pin.selected').forEach(p => p.classList.remove('selected'));
+            document.querySelectorAll('.pin.temp-pin').forEach(p => p.remove());
             pin.classList.add('selected');
             selectedPin = pin;
             isNewPin = false;
@@ -1303,6 +1370,14 @@ $imageExists = file_exists($imagePath);
             currentPosY = parseFloat(pin.dataset.posY);
 
             enableFormFields(false); // Existing pin: device ID is locked
+
+            const cancelBtn = document.getElementById('btnCancelPin');
+            if (cancelBtn) {
+                cancelBtn.textContent = 'Deselect';
+                cancelBtn.style.display = '';
+            }
+            const closeBtn = document.getElementById('btnPanelClose');
+            if (closeBtn) closeBtn.style.display = 'flex';
 
             document.getElementById('coordX').textContent = currentPosX.toFixed(1) + '%';
             document.getElementById('coordY').textContent = currentPosY.toFixed(1) + '%';
@@ -1357,12 +1432,16 @@ $imageExists = file_exists($imagePath);
                 document.querySelectorAll('.pin.selected').forEach(p => p.classList.remove('selected'));
                 document.querySelectorAll('.pin.temp-pin').forEach(p => p.remove());
 
+                // Default status follows active filter if set, otherwise Planned
+                const initialStatus = (activeFilter !== 'all') ? activeFilter : 'Planned';
+
                 const pin = document.createElement('div');
                 pin.className = 'pin selected temp-pin';
                 pin.innerHTML = PIN_SVG + `<span class="pin-label">NEW</span>`;
                 pin.style.left = x + '%';
                 pin.style.top  = y + '%';
-                pin.setAttribute('data-status', 'Planned');
+                pin.setAttribute('data-status', initialStatus);
+                pin.dataset.status = initialStatus;
                 stage.appendChild(pin);
 
                 selectedPin = pin;
@@ -1370,12 +1449,20 @@ $imageExists = file_exists($imagePath);
 
                 enableFormFields(true); // New pin: enable device ID input
 
+                const cancelBtn = document.getElementById('btnCancelPin');
+                if (cancelBtn) {
+                    cancelBtn.textContent = 'Cancel New Pin';
+                    cancelBtn.style.display = '';
+                }
+                const closeBtn = document.getElementById('btnPanelClose');
+                if (closeBtn) closeBtn.style.display = 'flex';
+
                 document.getElementById('coordX').textContent = x.toFixed(1) + '%';
                 document.getElementById('coordY').textContent = y.toFixed(1) + '%';
                 document.getElementById('inputDeviceId').value = '';
                 document.getElementById('inputType').value = 'Hikvision Dome';
                 document.getElementById('inputIp').value = '';
-                document.getElementById('inputStatus').value = 'Planned';
+                document.getElementById('inputStatus').value = initialStatus;
                 document.getElementById('inputNotes').value = '';
                 document.getElementById('inputSerial').value = '';
                 document.getElementById('inputMac').value = '';
@@ -1469,6 +1556,12 @@ $imageExists = file_exists($imagePath);
             selectedPin = null; isNewPin = false; currentPosX = currentPosY = null;
             document.querySelectorAll('.pin.selected').forEach(p => p.classList.remove('selected'));
             document.querySelectorAll('.pin.temp-pin').forEach(p => p.remove());
+
+            const cancelBtn = document.getElementById('btnCancelPin');
+            if (cancelBtn) cancelBtn.style.display = 'none';
+            const closeBtn = document.getElementById('btnPanelClose');
+            if (closeBtn) closeBtn.style.display = 'none';
+
             document.getElementById('coordX').textContent = '—';
             document.getElementById('coordY').textContent = '—';
             document.getElementById('inputDeviceId').value = '';
@@ -1600,6 +1693,15 @@ $imageExists = file_exists($imagePath);
                         sc.classList.toggle('active', sc.dataset.filter === activeFilter);
                     });
 
+                    // Cancel unsaved pin or deselect mismatched node on filter switch
+                    if (isNewPin) {
+                        resetPanel();
+                    } else if (selectedPin) {
+                        const selDev = selectedPin.dataset.deviceId;
+                        const selNode = nodes.find(n => n.device_id === selDev);
+                        if (selNode && !nodeMatchesSearchAndFilter(selNode)) resetPanel();
+                    }
+
                     applyFilters();
                 });
             });
@@ -1617,6 +1719,15 @@ $imageExists = file_exists($imagePath);
                         c.classList.toggle('active', c.dataset.filter === f);
                     });
 
+                    // Cancel unsaved pin or deselect mismatched node on filter switch
+                    if (isNewPin) {
+                        resetPanel();
+                    } else if (selectedPin) {
+                        const selDev = selectedPin.dataset.deviceId;
+                        const selNode = nodes.find(n => n.device_id === selDev);
+                        if (selNode && !nodeMatchesSearchAndFilter(selNode)) resetPanel();
+                    }
+
                     applyFilters();
                 });
             });
@@ -1631,6 +1742,15 @@ $imageExists = file_exists($imagePath);
                 if (mapSearch && mapSearch.value !== val) mapSearch.value = val;
                 if (tableSearch && tableSearch.value !== val) tableSearch.value = val;
                 if (mapClear) mapClear.style.display = currentSearchQuery ? 'inline-block' : 'none';
+
+                if (isNewPin) {
+                    resetPanel();
+                } else if (selectedPin) {
+                    const selDev = selectedPin.dataset.deviceId;
+                    const selNode = nodes.find(n => n.device_id === selDev);
+                    if (selNode && !nodeMatchesSearchAndFilter(selNode)) resetPanel();
+                }
+
                 applyFilters();
             }
 
@@ -1847,8 +1967,23 @@ $imageExists = file_exists($imagePath);
         }
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closePhotoLightbox();
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('photoLightboxModal');
+                if (modal && modal.classList.contains('active')) {
+                    closePhotoLightbox();
+                } else if (selectedPin || isNewPin) {
+                    resetPanel();
+                }
+            }
         });
+
+        // Click outside stage on dark area resets selection / cancels unsaved pin
+        const bpArea = document.getElementById('blueprintArea');
+        if (bpArea) {
+            bpArea.addEventListener('click', (e) => {
+                if (e.target === bpArea) resetPanel();
+            });
+        }
 
         // ── TOAST ──
         function showToast(m,t='info') {

@@ -83,6 +83,42 @@ try {
                 ");
             }
         }
+
+        // Auto-migration: ensure projects table exists for Project / Client Folder Organization
+        $projTableCheck = $pdo->query("SHOW TABLES LIKE 'projects'")->fetch();
+        if (!$projTableCheck) {
+            $pdo->exec("
+                CREATE TABLE IF NOT EXISTS `projects` (
+                  `id`           INT AUTO_INCREMENT PRIMARY KEY,
+                  `client_name`  VARCHAR(150) NOT NULL,
+                  `name`         VARCHAR(150) NOT NULL,
+                  `code`         VARCHAR(50)  NOT NULL UNIQUE,
+                  `description`  TEXT,
+                  `status`       VARCHAR(50)  NOT NULL DEFAULT 'Active',
+                  `created_by`   INT DEFAULT NULL,
+                  `created_at`   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  `updated_at`   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                  FOREIGN KEY (`created_by`) REFERENCES `users`(`id`) ON DELETE SET NULL
+                ) ENGINE=InnoDB;
+
+                INSERT INTO `projects` (`id`, `client_name`, `name`, `code`, `description`, `status`, `created_by`) VALUES
+                (1, 'Reckitt Benckiser (M) Sdn Bhd', 'Reckitt Benckiser CCTV Upgrade & Perimeter Defense', 'RB-JB-2026', 'Full factory and warehouse 1 & 2 IP CCTV upgrade, conduit cabling, and NVR rack commissioning.', 'Active', 1),
+                (2, 'MEMIS Corporate Headquarters', 'MEMIS HQ Smart Facility & NOC Expansion', 'MEMIS-HQ-01', 'Operations center, server room, and biometric access control deployment.', 'Completed', 1)
+                ON DUPLICATE KEY UPDATE `name`=VALUES(`name`);
+            ");
+        }
+
+        // Auto-migration: ensure project_id column exists in blueprints table
+        $bpProjColCheck = $pdo->query("SHOW COLUMNS FROM blueprints LIKE 'project_id'")->fetch();
+        if (!$bpProjColCheck) {
+            $pdo->exec("
+                ALTER TABLE `blueprints`
+                ADD COLUMN `project_id` INT NULL DEFAULT NULL AFTER `description`,
+                ADD CONSTRAINT `fk_blueprints_project` FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON DELETE SET NULL;
+            ");
+            $pdo->exec("UPDATE `blueprints` SET `project_id` = 2 WHERE `id` = 1 AND `project_id` IS NULL");
+            $pdo->exec("UPDATE `blueprints` SET `project_id` = 1 WHERE `name` LIKE '%Reckitt%' AND `project_id` IS NULL");
+        }
     }
 } catch (PDOException $e) {
     // If database doesn't exist, try connecting to MySQL server to create it automatically
