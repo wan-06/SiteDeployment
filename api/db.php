@@ -145,7 +145,7 @@ try {
         http_response_code(500);
         echo json_encode([
             'success' => false,
-            'error'   => 'Cannot connect to MySQL server. Please ensure MySQL is started in XAMPP Control Panel. (' . $e->getMessage() . ')'
+            'error'   => 'Cannot connect to MySQL server. Please ensure MySQL is started in Laragon. (' . $e->getMessage() . ')'
         ]);
         exit;
     }
