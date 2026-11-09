@@ -40,7 +40,8 @@ $imageExists = file_exists($imagePath);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SiteDeploy — <?= htmlspecialchars($blueprint['name']) ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="assets/js/qrcode.min.js"></script>
     <style>
         *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
         :root {
@@ -972,6 +973,158 @@ $imageExists = file_exists($imagePath);
         }
         ::-webkit-scrollbar{width:5px} ::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px}
         .side-panel ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15)}
+        /* ── ASSET QR CODE STICKER STYLES ── */
+        .btn-batch-qr {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(185, 255, 102, 0.12);
+            color: var(--lime);
+            border: 1px solid rgba(185, 255, 102, 0.35);
+            border-radius: 8px;
+            padding: 7px 12px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.18s ease;
+        }
+        .btn-batch-qr:hover {
+            background: var(--lime);
+            color: #111827;
+            box-shadow: 0 0 14px rgba(185, 255, 102, 0.4);
+        }
+
+        .single-sticker-card {
+            background: #ffffff;
+            color: #000000;
+            border: 2px solid #111827;
+            border-radius: 8px;
+            padding: 12px 14px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            margin: 0 auto;
+        }
+        .single-sticker-card .sticker-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1.5px solid #111827;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+        .single-sticker-card .sticker-brand {
+            font-size: 0.72rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .single-sticker-card .sticker-brand-tag {
+            background: #000;
+            color: #fff;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.62rem;
+        }
+        .single-sticker-card .sticker-project {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #374151;
+            text-transform: uppercase;
+        }
+        .single-sticker-card .sticker-body {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .single-sticker-card .sticker-qr-box {
+            width: 104px;
+            height: 104px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 2px;
+            flex-shrink: 0;
+        }
+        .single-sticker-card .sticker-qr-box canvas,
+        .single-sticker-card .sticker-qr-box img {
+            width: 100px !important;
+            height: 100px !important;
+            display: block;
+        }
+        .single-sticker-card .sticker-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 0;
+            flex: 1;
+        }
+        .single-sticker-card .sticker-device-id {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: #000;
+            line-height: 1;
+            margin-bottom: 2px;
+        }
+        .single-sticker-card .sticker-type {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #4b5563;
+        }
+        .single-sticker-card .sticker-row {
+            font-size: 0.7rem;
+            color: #1f2937;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .single-sticker-card .sticker-row strong {
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 700;
+        }
+        .single-sticker-card .sticker-footer {
+            border-top: 1px dashed #9ca3af;
+            margin-top: 8px;
+            padding-top: 5px;
+            font-size: 0.62rem;
+            font-weight: 700;
+            color: #4b5563;
+            text-align: center;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        /* Print rule for single sticker printing */
+        @media print {
+            body.printing-single-sticker * {
+                visibility: hidden !important;
+            }
+            body.printing-single-sticker #singleStickerContainer,
+            body.printing-single-sticker #singleStickerContainer * {
+                visibility: visible !important;
+            }
+            body.printing-single-sticker #singleStickerContainer {
+                position: fixed !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 65mm !important;
+                border: 1.5px solid #000 !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+            }
+        }
+
+        .pin-scan-highlight {
+            animation: scanPinPulse 0.9s ease-in-out infinite alternate !important;
+        }
+        @keyframes scanPinPulse {
+            from { transform: translate(-50%, -100%) scale(1); filter: drop-shadow(0 0 6px #B9FF66); }
+            to { transform: translate(-50%, -100%) scale(1.4); filter: drop-shadow(0 0 24px #B9FF66); }
+        }
     </style>
 </head>
 <body>
@@ -1071,6 +1224,9 @@ $imageExists = file_exists($imagePath);
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                         <span>NOC Monitor</span>
                     </button>
+                    <a href="batch_qr.php?blueprint_id=<?= $blueprint['id'] ?>" target="_blank" id="btnBatchQrStickers" class="btn-batch-qr" title="Print All Equipment QR Sticker Labels (A4 / Thermal Roll)">
+                        <span>🏷️ QR Stickers</span>
+                    </a>
                     <span style="font-size:0.75rem;color:var(--text-muted);font-weight:600;" id="pinCount">0 pins</span>
                 </div>
             </div>
@@ -1103,7 +1259,12 @@ $imageExists = file_exists($imagePath);
                     <h3 id="panelTitle">Node Inspector</h3>
                     <p id="panelSubtitle">Click the map to drop a pin</p>
                 </div>
-                <button type="button" id="btnPanelClose" class="panel-close-btn" onclick="resetPanel()" title="Cancel / Clear selection" style="display:none;">✕</button>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <button type="button" id="btnHeaderQrSticker" class="btn btn-sm" onclick="openQrStickerModalForCurrentNode()" title="Generate Asset QR Sticker" style="display:none; background:rgba(185,255,102,0.12); border:1px solid rgba(185,255,102,0.3); color:var(--lime); padding:4px 8px; font-size:0.75rem; font-weight:700; border-radius:6px;">
+                        <span>🏷️ QR</span>
+                    </button>
+                    <button type="button" id="btnPanelClose" class="panel-close-btn" onclick="resetPanel()" title="Cancel / Clear selection" style="display:none;">✕</button>
+                </div>
             </div>
             <div class="panel-body">
                 <!-- Pin-first notice: shown when no pin is placed yet -->
@@ -1380,6 +1541,9 @@ $imageExists = file_exists($imagePath);
                 </div><!-- end #nodeFormFields -->
             </div>
             <div class="panel-footer">
+                <button type="button" class="btn btn-sm" id="btnInspectorQrSticker" onclick="openQrStickerModalForCurrentNode()" style="display:none; width:100%; justify-content:center; gap:6px; font-weight:700; margin-bottom:8px; border:1px solid rgba(185,255,102,0.4); color:var(--lime); background:rgba(185,255,102,0.08);">
+                    <span>🏷️ View / Print QR Sticker</span>
+                </button>
                 <button class="btn btn-lime btn-disabled-muted" id="btnSave" onclick="saveNode()" disabled>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                     Pin a location first
@@ -1679,6 +1843,74 @@ $imageExists = file_exists($imagePath);
             <div class="modal-footer" style="padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
                 <span id="nocLastScanText" style="font-size:0.72rem; color:var(--text-muted);">Last scan: Never</span>
                 <button class="btn btn-sm" onclick="closeModal('nocMonitorModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ MODAL: ASSET QR CODE STICKER ═══ -->
+    <div id="qrStickerModal" class="modal-overlay" onclick="if(event.target===this)closeModal('qrStickerModal')">
+        <div class="modal" style="max-width:480px;" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3><span>🏷️ Asset QR Code Sticker</span></h3>
+                <button class="modal-close" onclick="closeModal('qrStickerModal')" title="Close">✕</button>
+            </div>
+            <div class="modal-body" style="padding-top:16px;">
+                <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:14px; line-height:1.45;">
+                    Industrial equipment sticker label. Stick on camera housings, junction boxes, or rack patch panels for instant field inspection.
+                </p>
+
+                <!-- Sticker Preview Card -->
+                <div id="singleStickerContainer" class="single-sticker-card">
+                    <div class="sticker-header">
+                        <div class="sticker-brand">
+                            <span class="sticker-brand-tag">MEMIS</span>
+                            <span>ASSET TAG</span>
+                        </div>
+                        <div class="sticker-project" id="stickerProjectCode">
+                            <?= htmlspecialchars($blueprint['project_code'] ?: $blueprint['name']) ?>
+                        </div>
+                    </div>
+                    <div class="sticker-body">
+                        <div class="sticker-qr-box" id="singleQrBox"></div>
+                        <div class="sticker-meta">
+                            <div class="sticker-device-id" id="stickerDeviceId">CAM-01</div>
+                            <div class="sticker-type" id="stickerDeviceType">Bullet Camera</div>
+                            <div class="sticker-row">IP: <strong id="stickerIpAddr">192.168.1.100</strong></div>
+                            <div class="sticker-row">Port: <strong id="stickerSwitchPort">SW-01 : P12</strong></div>
+                            <div class="sticker-row">Cable: <strong id="stickerCableTag">C-CAM-01</strong></div>
+                            <div class="sticker-row">Status: <strong id="stickerStatusBadge">LIVE</strong></div>
+                        </div>
+                    </div>
+                    <div class="sticker-footer">
+                        Scan with phone camera to inspect &amp; update on-site
+                    </div>
+                </div>
+
+                <!-- Direct Scan Link box -->
+                <div style="margin-top:14px;">
+                    <label style="font-size:0.75rem; color:#6B7280; text-transform:uppercase; font-weight:700; margin-bottom:4px; display:block;">Field Technician Scan URL</label>
+                    <div style="display:flex; gap:6px;">
+                        <input type="text" id="stickerScanUrlInput" readonly style="flex:1; font-family:'IBM Plex Mono', monospace; font-size:0.75rem; padding:8px 10px; background:#111827; border:1px solid #374151; border-radius:6px; color:#93c5fd;">
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="copyScanUrlToClipboard()" title="Copy Link to Clipboard">
+                            📋 Copy
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; gap:8px;">
+                    <a id="btnTestMobileScan" href="#" target="_blank" class="btn btn-sm" style="background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.4); color:#93c5fd;">
+                        📱 Test Mobile View
+                    </a>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="downloadStickerBadge()">
+                        💾 Download PNG
+                    </button>
+                    <button type="button" class="btn btn-sm btn-lime" onclick="printSingleSticker()">
+                        🖨️ Print Label
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -2089,7 +2321,14 @@ $imageExists = file_exists($imagePath);
             try {
                 const res = await fetch('api/get_nodes.php?blueprint_id=' + BLUEPRINT_ID);
                 const json = await res.json();
-                if (json.success) { nodes = json.data; renderPins(); renderTable(); updateStats(); renderFovCones(); }
+                if (json.success) {
+                    nodes = json.data;
+                    renderPins();
+                    renderTable();
+                    updateStats();
+                    renderFovCones();
+                    checkUrlAutoSelect();
+                }
             } catch(e) { showToast('Failed to load nodes: ' + e.message, 'error'); }
         }
 
@@ -2315,6 +2554,11 @@ $imageExists = file_exists($imagePath);
             const closeBtn = document.getElementById('btnPanelClose');
             if (closeBtn) closeBtn.style.display = 'flex';
 
+            const qrStickerBtn = document.getElementById('btnInspectorQrSticker');
+            if (qrStickerBtn) qrStickerBtn.style.display = 'flex';
+            const qrHeaderBtn = document.getElementById('btnHeaderQrSticker');
+            if (qrHeaderBtn) qrHeaderBtn.style.display = 'inline-flex';
+
             document.getElementById('coordX').textContent = currentPosX.toFixed(1) + '%';
             document.getElementById('coordY').textContent = currentPosY.toFixed(1) + '%';
             document.getElementById('inputDeviceId').value = pin.dataset.deviceId;
@@ -2397,6 +2641,11 @@ $imageExists = file_exists($imagePath);
 
                 selectedPin = pin;
                 isNewPin = true;
+
+                const qrStickerBtn = document.getElementById('btnInspectorQrSticker');
+                if (qrStickerBtn) qrStickerBtn.style.display = 'none';
+                const qrHeaderBtn = document.getElementById('btnHeaderQrSticker');
+                if (qrHeaderBtn) qrHeaderBtn.style.display = 'none';
 
                 enableFormFields(true); // New pin: enable device ID input
 
@@ -2517,6 +2766,10 @@ $imageExists = file_exists($imagePath);
             if (cancelBtn) cancelBtn.style.display = 'none';
             const closeBtn = document.getElementById('btnPanelClose');
             if (closeBtn) closeBtn.style.display = 'none';
+            const qrStickerBtn = document.getElementById('btnInspectorQrSticker');
+            if (qrStickerBtn) qrStickerBtn.style.display = 'none';
+            const qrHeaderBtn = document.getElementById('btnHeaderQrSticker');
+            if (qrHeaderBtn) qrHeaderBtn.style.display = 'none';
 
             document.getElementById('coordX').textContent = '—';
             document.getElementById('coordY').textContent = '—';
@@ -2934,6 +3187,7 @@ $imageExists = file_exists($imagePath);
                 const cableSched = document.getElementById('cableScheduleModal');
                 const scaleModal = document.getElementById('scaleCalibrationModal');
                 const nocModal = document.getElementById('nocMonitorModal');
+                const qrModal = document.getElementById('qrStickerModal');
                 if (modal && modal.classList.contains('active')) {
                     closePhotoLightbox();
                 } else if (cableSched && cableSched.classList.contains('active')) {
@@ -2942,6 +3196,8 @@ $imageExists = file_exists($imagePath);
                     closeModal('scaleCalibrationModal');
                 } else if (nocModal && nocModal.classList.contains('active')) {
                     closeModal('nocMonitorModal');
+                } else if (qrModal && qrModal.classList.contains('active')) {
+                    closeModal('qrStickerModal');
                 } else if (isConnectCableMode) {
                     cancelConnectCableTool();
                 } else if (isRoutingMode) {
@@ -2964,6 +3220,201 @@ $imageExists = file_exists($imagePath);
         function closeModal(id) {
             const el = document.getElementById(id);
             if (el) el.classList.remove('active');
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // ── ASSET QR CODE STICKER & URL SELECTION FUNCTIONS ──
+        // ══════════════════════════════════════════════════════════════
+
+        let currentQrInstance = null;
+
+        function openQrStickerModalForCurrentNode() {
+            if (!selectedPin) {
+                showToast('Please select a device pin first', 'info');
+                return;
+            }
+            const devId = selectedPin.dataset.deviceId;
+            const node = nodes.find(n => n.device_id === devId);
+            if (!node) return;
+
+            renderSingleQrSticker(node);
+            openModal('qrStickerModal');
+        }
+
+        function renderSingleQrSticker(node) {
+            const box = document.getElementById('singleQrBox');
+            if (!box) return;
+
+            const baseUrl = `${window.location.origin}${window.location.pathname.replace(/map\.php.*$/, '')}quick_scan.php`;
+            const scanUrl = `${baseUrl}?id=${node.id}&dev=${encodeURIComponent(node.device_id)}&bp=${BLUEPRINT_ID}`;
+
+            document.getElementById('stickerDeviceId').textContent = node.device_id;
+            document.getElementById('stickerDeviceType').textContent = node.type || 'Generic Device';
+            document.getElementById('stickerIpAddr').textContent = node.ip_address || 'DHCP / Unassigned';
+
+            const switchPort = (node.switch_id || '—') + (node.port_no ? ` : P${node.port_no}` : '');
+            document.getElementById('stickerSwitchPort').textContent = switchPort;
+
+            const cable = cables.find(c => parseInt(c.from_node_id) === parseInt(node.id) || parseInt(c.to_node_id) === parseInt(node.id));
+            const cableTag = node.cable_label || (cable ? `${cable.cable_label} (${cable.total_length_meters}m)` : '—');
+            document.getElementById('stickerCableTag').textContent = cableTag;
+
+            document.getElementById('stickerStatusBadge').textContent = (node.status || 'Planned').toUpperCase();
+
+            const urlInput = document.getElementById('stickerScanUrlInput');
+            if (urlInput) urlInput.value = scanUrl;
+
+            const testLink = document.getElementById('btnTestMobileScan');
+            if (testLink) testLink.href = scanUrl;
+
+            // Generate high-resolution crisp QR code
+            box.innerHTML = '';
+            currentQrInstance = new QRCode(box, {
+                text: scanUrl,
+                width: 100,
+                height: 100,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        }
+
+        function copyScanUrlToClipboard() {
+            const input = document.getElementById('stickerScanUrlInput');
+            if (!input) return;
+            input.select();
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(input.value).then(() => {
+                    showToast('Scan URL copied to clipboard!', '✓');
+                }).catch(() => {
+                    document.execCommand('copy');
+                    showToast('Scan URL copied!', '✓');
+                });
+            } else {
+                document.execCommand('copy');
+                showToast('Scan URL copied!', '✓');
+            }
+        }
+
+        function printSingleSticker() {
+            document.body.classList.add('printing-single-sticker');
+            window.print();
+            setTimeout(() => {
+                document.body.classList.remove('printing-single-sticker');
+            }, 1000);
+        }
+
+        function downloadStickerBadge() {
+            const sticker = document.getElementById('singleStickerContainer');
+            if (!sticker) return;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 600;
+            canvas.height = 340;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Border
+            ctx.strokeStyle = '#111827';
+            ctx.lineWidth = 6;
+            ctx.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
+
+            // Header line
+            ctx.beginPath();
+            ctx.moveTo(8, 64);
+            ctx.lineTo(canvas.width - 8, 64);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#111827';
+            ctx.stroke();
+
+            // Brand tag
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(24, 20, 72, 28);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 16px "Plus Jakarta Sans", sans-serif';
+            ctx.fillText('MEMIS', 32, 40);
+
+            ctx.fillStyle = '#000000';
+            ctx.font = 'bold 16px "Plus Jakarta Sans", sans-serif';
+            ctx.fillText('ASSET TAG', 106, 40);
+
+            const prjCode = document.getElementById('stickerProjectCode')?.textContent.trim() || 'SITE ASSET';
+            ctx.fillStyle = '#4b5563';
+            ctx.font = 'bold 15px "Plus Jakarta Sans", sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(prjCode, canvas.width - 24, 40);
+            ctx.textAlign = 'left';
+
+            // QR Code
+            const qrImg = sticker.querySelector('.sticker-qr-box img') || sticker.querySelector('.sticker-qr-box canvas');
+            if (qrImg) {
+                ctx.drawImage(qrImg, 24, 80, 160, 160);
+            }
+
+            // Text Metadata
+            const devId = document.getElementById('stickerDeviceId')?.textContent || 'DEVICE';
+            const devType = document.getElementById('stickerDeviceType')?.textContent || 'Hardware';
+            const ip = document.getElementById('stickerIpAddr')?.textContent || '—';
+            const port = document.getElementById('stickerSwitchPort')?.textContent || '—';
+            const cable = document.getElementById('stickerCableTag')?.textContent || '—';
+            const status = document.getElementById('stickerStatusBadge')?.textContent || 'PLANNED';
+
+            const textX = 206;
+            ctx.fillStyle = '#000000';
+            ctx.font = '800 30px "IBM Plex Mono", monospace';
+            ctx.fillText(devId, textX, 110);
+
+            ctx.fillStyle = '#4b5563';
+            ctx.font = '600 15px "Plus Jakarta Sans", sans-serif';
+            ctx.fillText(devType, textX, 134);
+
+            ctx.fillStyle = '#1f2937';
+            ctx.font = '14px "Plus Jakarta Sans", sans-serif';
+            ctx.fillText(`IP: ${ip}`, textX, 164);
+            ctx.fillText(`Port: ${port}`, textX, 188);
+            ctx.fillText(`Cable: ${cable}`, textX, 212);
+            ctx.fillText(`Status: ${status}`, textX, 236);
+
+            // Dashed footer line
+            ctx.beginPath();
+            ctx.moveTo(8, 264);
+            ctx.lineTo(canvas.width - 8, 264);
+            ctx.setLineDash([6, 4]);
+            ctx.strokeStyle = '#9ca3af';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.fillStyle = '#6b7280';
+            ctx.font = 'bold 12px "Plus Jakarta Sans", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('SCAN WITH PHONE CAMERA TO INSPECT & VERIFY ON-SITE', canvas.width / 2, 296);
+
+            const link = document.createElement('a');
+            link.download = `Sticker_${devId}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            showToast(`Sticker downloaded for ${devId}!`, '✓');
+        }
+
+        function checkUrlAutoSelect() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetDevId = urlParams.get('select');
+            if (targetDevId) {
+                const targetNode = nodes.find(n => (n.device_id || '').toLowerCase() === targetDevId.toLowerCase());
+                if (targetNode) {
+                    const pin = document.querySelector(`.pin[data-device-id="${targetNode.device_id}"]`);
+                    if (pin) {
+                        selectPin(pin);
+                        pin.classList.add('pin-scan-highlight');
+                        pin.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                        setTimeout(() => pin.classList.remove('pin-scan-highlight'), 3500);
+                        showToast(`Located ${targetNode.device_id} on floorplan`, 'info');
+                    }
+                }
+            }
         }
 
         // ── INTERACTIVE CONNECT CABLE TOOL FUNCTIONS ──
