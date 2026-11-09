@@ -59,6 +59,37 @@ foreach ($nodes as $n) {
     $nodeMap[$n['device_id']] = $n;
 }
 
+// Fetch structured cable runs
+$cableStmt = $pdo->prepare("
+    SELECT c.*,
+           fn.device_id AS from_device_id, fn.type AS from_type, fn.pos_x AS from_pos_x, fn.pos_y AS from_pos_y, fn.status AS from_status,
+           tn.device_id AS to_device_id, tn.type AS to_type, tn.pos_x AS to_pos_x, tn.pos_y AS to_pos_y, tn.status AS to_status
+    FROM cables c
+    JOIN nodes fn ON fn.id = c.from_node_id
+    JOIN nodes tn ON tn.id = c.to_node_id
+    WHERE c.blueprint_id = ?
+    ORDER BY c.cable_label ASC, c.id ASC
+");
+$cableStmt->execute([$blueprintId]);
+$cables = $cableStmt->fetchAll();
+
+$totalCableMeters = 0.0;
+$cat6Meters = 0.0;
+$otherCableMeters = 0.0;
+foreach ($cables as &$c) {
+    $c['waypoints'] = !empty($c['waypoints']) ? json_decode($c['waypoints'], true) : [];
+    $len = floatval($c['total_length_meters']);
+    $totalCableMeters += $len;
+    if (strpos($c['cable_type'], 'Cat6 UTP') !== false) {
+        $cat6Meters += $len;
+    } else {
+        $otherCableMeters += $len;
+    }
+}
+unset($c);
+$cat6Boxes = (int)ceil($cat6Meters / 305);
+$cat6Leftover = round(($cat6Boxes * 305) - $cat6Meters, 1);
+
 // Statistics
 $totalNodes = count($nodes);
 $liveNodes = count(array_filter($nodes, fn($n) => $n['status'] === 'Live'));
@@ -401,7 +432,27 @@ $imagePath = 'uploads/blueprints/' . htmlspecialchars($blueprint['image_filename
             margin-bottom: 2px;
         }
 
-        /* ── SECTION 3: SITE PHOTO EVIDENCE GALLERY ── */
+        /* ── SECTION 3: CABLE SCHEDULE & BOM ── */
+        .cable-bom-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        @media (max-width: 800px) {
+            .cable-bom-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        .cable-bom-box {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 14px;
+            background: #FAFAFA;
+        }
+        .cable-bom-title { font-size: 0.68rem; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+        .cable-bom-val { font-size: 1.15rem; font-weight: 800; font-family: 'IBM Plex Mono', monospace; color: var(--dark); margin: 3px 0; }
+        .cable-bom-sub { font-size: 0.68rem; color: var(--muted); }
+
+        /* ── SECTION 4: SITE PHOTO EVIDENCE GALLERY ── */
         .photo-evidence-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -578,7 +629,7 @@ $imagePath = 'uploads/blueprints/' . htmlspecialchars($blueprint['image_filename
                     <span class="doc-meta-value"><?= htmlspecialchars($user['full_name']) ?> (<?= htmlspecialchars($user['role']) ?>)</span>
                 </div>
             </div>
-            <div class="stat-summary-boxes">
+            <div class="stat-summary-boxes" style="grid-template-columns: repeat(5, 1fr);">
                 <div class="stat-box">
                     <div class="s-val" style="color:#111;"><?= $totalNodes ?></div>
                     <div class="s-lbl">Total Devices</div>
@@ -586,6 +637,10 @@ $imagePath = 'uploads/blueprints/' . htmlspecialchars($blueprint['image_filename
                 <div class="stat-box">
                     <div class="s-val" style="color:#22c55e;"><?= $liveNodes ?></div>
                     <div class="s-lbl">Live &amp; Tested</div>
+                </div>
+                <div class="stat-box">
+                    <div class="s-val" style="color:#2563eb;"><?= round($totalCableMeters, 1) ?>m</div>
+                    <div class="s-lbl"><?= count($cables) ?> Cable Runs</div>
                 </div>
                 <div class="stat-box">
                     <div class="s-val" style="color:#8b5cf6;"><?= count($photos) ?></div>
@@ -651,6 +706,62 @@ $imagePath = 'uploads/blueprints/' . htmlspecialchars($blueprint['image_filename
                         <line x1="<?= round($cx, 1) ?>" y1="<?= round($cy, 1) ?>" x2="<?= round($xm, 1) ?>" y2="<?= round($ym, 1) ?>" stroke="<?= $stroke ?>" stroke-width="1" stroke-dasharray="3 2" />
                     <?php endif;
                 endforeach; ?>
+            </svg>
+
+            <!-- SVG Structured Cable Routes Overlay -->
+            <svg class="report-cables-svg" viewBox="0 0 <?= $vw ?> <?= $vh ?>" style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:3;">
+                <?php foreach ($cables as $c): 
+                    $pStartX = (floatval($c['from_pos_x']) / 100) * $vw;
+                    $pStartY = (floatval($c['from_pos_y']) / 100) * $vh;
+                    $pEndX   = (floatval($c['to_pos_x']) / 100) * $vw;
+                    $pEndY   = (floatval($c['to_pos_y']) / 100) * $vh;
+                    $color = $c['color'] ?: '#2563eb';
+                    $d = sprintf("M %.1f %.1f", $pStartX, $pStartY);
+                    $pts = [['x' => $pStartX, 'y' => $pStartY]];
+                    if (!empty($c['waypoints']) && is_array($c['waypoints'])) {
+                        foreach ($c['waypoints'] as $wp) {
+                            if (isset($wp['x']) && isset($wp['y'])) {
+                                $wpx = (floatval($wp['x']) / 100) * $vw;
+                                $wpy = (floatval($wp['y']) / 100) * $vh;
+                                $d .= sprintf(" L %.1f %.1f", $wpx, $wpy);
+                                $pts[] = ['x' => $wpx, 'y' => $wpy];
+                            }
+                        }
+                    }
+                    $d .= sprintf(" L %.1f %.1f", $pEndX, $pEndY);
+                    $pts[] = ['x' => $pEndX, 'y' => $pEndY];
+
+                    // Find midpoint along polyline
+                    $tLen = 0.0;
+                    $sLens = [];
+                    for ($i = 0; $i < count($pts) - 1; $i++) {
+                        $dx = $pts[$i+1]['x'] - $pts[$i]['x'];
+                        $dy = $pts[$i+1]['y'] - $pts[$i]['y'];
+                        $sl = sqrt($dx*$dx + $dy*$dy);
+                        $sLens[] = $sl;
+                        $tLen += $sl;
+                    }
+                    $hLen = $tLen / 2;
+                    $acc = 0;
+                    $midX = $pts[0]['x'];
+                    $midY = $pts[0]['y'];
+                    for ($i = 0; $i < count($sLens); $i++) {
+                        if ($acc + $sLens[$i] >= $hLen || $i === count($sLens) - 1) {
+                            $rem = $hLen - $acc;
+                            $ratio = $sLens[$i] > 0 ? ($rem / $sLens[$i]) : 0.5;
+                            $midX = $pts[$i]['x'] + ($pts[$i+1]['x'] - $pts[$i]['x']) * $ratio;
+                            $midY = $pts[$i]['y'] + ($pts[$i+1]['y'] - $pts[$i]['y']) * $ratio;
+                            break;
+                        }
+                        $acc += $sLens[$i];
+                    }
+                    $tagText = $c['cable_label'] . ' · ' . floatval($c['total_length_meters']) . 'm';
+                    $tagW = max(70, strlen($tagText) * 6.5 + 14);
+                ?>
+                    <path d="<?= $d ?>" fill="none" stroke="<?= $color ?>" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.88" />
+                    <rect x="<?= round($midX - ($tagW/2), 1) ?>" y="<?= round($midY - 9, 1) ?>" width="<?= round($tagW, 1) ?>" height="18" rx="3" fill="#191A23" stroke="<?= $color ?>" stroke-width="1" />
+                    <text x="<?= round($midX, 1) ?>" y="<?= round($midY, 1) ?>" fill="#ffffff" font-family="'IBM Plex Mono', monospace" font-size="8.5" font-weight="700" text-anchor="middle" dominant-baseline="central"><?= htmlspecialchars($tagText) ?></text>
+                <?php endforeach; ?>
             </svg>
 
             <?php 
@@ -738,9 +849,87 @@ $imagePath = 'uploads/blueprints/' . htmlspecialchars($blueprint['image_filename
             </table>
         </div>
 
-        <!-- ── SECTION 3: AS-BUILT SITE PHOTO EVIDENCE & INSTALLATION LOG ── -->
+        <!-- ── SECTION 3: STRUCTURED CABLING & CONDUIT SCHEDULE ── -->
         <div class="section-heading page-break">
-            <span class="section-pill" style="background:#8b5cf6;">Section 3</span>
+            <span class="section-pill" style="background:#2563eb;">Section 3</span>
+            <span class="section-title">Structured Cabling &amp; Conduit Schedule (Bill of Materials)</span>
+        </div>
+
+        <div class="cable-bom-grid">
+            <div class="cable-bom-box">
+                <div class="cable-bom-title">Total Cable Measured</div>
+                <div class="cable-bom-val" style="color:#2563eb;"><?= round($totalCableMeters, 1) ?> m</div>
+                <div class="cable-bom-sub"><?= count($cables) ?> structured cable runs</div>
+            </div>
+            <div class="cable-bom-box">
+                <div class="cable-bom-title">Cat6 UTP (305m Boxes)</div>
+                <div class="cable-bom-val" style="color:#111;"><?= $cat6Boxes ?> <?= $cat6Boxes === 1 ? 'Box' : 'Boxes' ?></div>
+                <div class="cable-bom-sub"><?= round($cat6Meters, 1) ?>m installed · <?= max(0, $cat6Leftover) ?>m rem.</div>
+            </div>
+            <div class="cable-bom-box">
+                <div class="cable-bom-title">Shielded / Specialty Cable</div>
+                <div class="cable-bom-val" style="color:#8b5cf6;"><?= round($otherCableMeters, 1) ?> m</div>
+                <div class="cable-bom-sub">Specialty conduit runs</div>
+            </div>
+            <div class="cable-bom-box">
+                <div class="cable-bom-title">Calibrated Scale</div>
+                <div class="cable-bom-val" style="color:#111;"><?= floatval($blueprint['real_width_meters'] ?? 60.0) ?> × <?= floatval($blueprint['real_height_meters'] ?? 40.0) ?>m</div>
+                <div class="cable-bom-sub">Horizontal Euclidean metric</div>
+            </div>
+        </div>
+
+        <div class="schedule-table-wrap">
+            <table class="tc-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px;">#</th>
+                        <th>Cable Tag</th>
+                        <th>Source Device</th>
+                        <th>Termination (Rack/NVR)</th>
+                        <th>Cable Spec</th>
+                        <th>Conduit / Trunking</th>
+                        <th style="text-align:right;">Run (m)</th>
+                        <th style="text-align:right;">Slack (m)</th>
+                        <th style="text-align:right;">Total (m)</th>
+                        <th style="text-align:center;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($cables)): ?>
+                        <tr><td colspan="10" style="text-align:center; padding:24px; color:var(--muted);">No structured cable runs documented for this layout.</td></tr>
+                    <?php else: ?>
+                        <?php 
+                        $cIdx = 1;
+                        foreach ($cables as $c): 
+                            $cStatusClass = strtolower(str_replace(' ', '-', $c['status']));
+                            $cTotal = floatval($c['total_length_meters']);
+                            $cSlack = floatval($c['slack_drop_meters']);
+                            $cRun = max(0, $cTotal - $cSlack);
+                        ?>
+                            <tr>
+                                <td><?= $cIdx ?></td>
+                                <td><span class="mono-text" style="font-weight:700; color:#2563eb; background:#eff6ff; padding:2px 6px; border-radius:4px; border:1px solid #bfdbfe;"><?= htmlspecialchars($c['cable_label']) ?></span></td>
+                                <td><strong><?= htmlspecialchars($c['from_device_id'] ?: 'Node #' . $c['from_node_id']) ?></strong></td>
+                                <td><strong><?= htmlspecialchars($c['to_device_id'] ?: 'Node #' . $c['to_node_id']) ?></strong></td>
+                                <td><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:<?= htmlspecialchars($c['color'] ?: '#3b82f6') ?>; margin-right:4px;"></span><?= htmlspecialchars($c['cable_type']) ?></td>
+                                <td style="font-size:0.75rem; color:var(--muted);"><?= htmlspecialchars($c['conduit_type']) ?></td>
+                                <td class="mono-text" style="text-align:right;"><?= number_format($cRun, 1) ?></td>
+                                <td class="mono-text" style="text-align:right;"><?= number_format($cSlack, 1) ?></td>
+                                <td class="mono-text" style="text-align:right; font-weight:700; color:#2563eb;"><?= number_format($cTotal, 1) ?></td>
+                                <td style="text-align:center;"><span class="status-pill <?= $cStatusClass ?>"><?= htmlspecialchars($c['status']) ?></span></td>
+                            </tr>
+                        <?php 
+                            $cIdx++;
+                        endforeach; 
+                        ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ── SECTION 4: AS-BUILT SITE PHOTO EVIDENCE & INSTALLATION LOG ── -->
+        <div class="section-heading page-break">
+            <span class="section-pill" style="background:#8b5cf6;">Section 4</span>
             <span class="section-title">As-Built Site Photo Evidence &amp; Visual Verification Log</span>
         </div>
 
@@ -796,10 +985,10 @@ $imagePath = 'uploads/blueprints/' . htmlspecialchars($blueprint['image_filename
             </div>
         <?php endif; ?>
 
-        <!-- ── SECTION 4: FORMAL SIGN-OFF BLOCK ── -->
+        <!-- ── SECTION 5: FORMAL SIGN-OFF BLOCK ── -->
         <div class="signoff-section">
             <div style="margin-bottom:16px;">
-                <span class="section-pill">Section 4</span>
+                <span class="section-pill">Section 5</span>
                 <span class="section-title" style="margin-left:8px;">Handover Verification &amp; Acceptance Sign-off</span>
             </div>
             <div class="signoff-grid">

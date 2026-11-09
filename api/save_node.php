@@ -54,23 +54,63 @@ $fov_distance    = isset($data['fov_distance']) ? max(2, min(80, intval($data['f
 try {
     $check = $pdo->prepare("SELECT id FROM nodes WHERE blueprint_id = ? AND device_id = ?");
     $check->execute([$blueprintId, $deviceId]);
+    $existingNode = $check->fetch();
 
-    if ($check->rowCount() > 0) {
+    if ($existingNode) {
+        $nodeId = $existingNode['id'];
         $update = $pdo->prepare("
             UPDATE nodes SET 
                 type = ?, serial_number = ?, ip_address = ?, mac_address = ?, 
                 switch_id = ?, port_no = ?, cable_label = ?, pos_x = ?, pos_y = ?, 
                 status = ?, notes = ?, tested_by = ?, commission_date = ?,
                 fov_enabled = ?, fov_angle = ?, fov_direction = ?, fov_distance = ?
-            WHERE blueprint_id = ? AND device_id = ?
+            WHERE id = ?
         ");
         $update->execute([
             $type, $serial_number, $ip_address, $mac_address,
             $switch_id, $port_no, $cable_label, $pos_x, $pos_y,
             $status, $notes, $tested_by, $commission_date,
             $fov_enabled, $fov_angle, $fov_direction, $fov_distance,
-            $blueprintId, $deviceId
+            $nodeId
         ]);
+
+        // Recalculate any cables connected to this node
+        $cableStmt = $pdo->prepare("
+            SELECT c.id, c.waypoints, c.slack_drop_meters,
+                   fn.pos_x AS from_x, fn.pos_y AS from_y,
+                   tn.pos_x AS to_x, tn.pos_y AS to_y
+            FROM cables c
+            JOIN nodes fn ON fn.id = c.from_node_id
+            JOIN nodes tn ON tn.id = c.to_node_id
+            WHERE c.from_node_id = ? OR c.to_node_id = ?
+        ");
+        $cableStmt->execute([$nodeId, $nodeId]);
+        $connectedCables = $cableStmt->fetchAll();
+
+        if (!empty($connectedCables)) {
+            $bpStmt = $pdo->prepare("SELECT real_width_meters, real_height_meters FROM blueprints WHERE id = ?");
+            $bpStmt->execute([$blueprintId]);
+            $bp = $bpStmt->fetch();
+            $rw = floatval($bp['real_width_meters'] ?? 60.0);
+            $rh = floatval($bp['real_height_meters'] ?? 40.0);
+
+            $upLen = $pdo->prepare("UPDATE cables SET total_length_meters = ? WHERE id = ?");
+            foreach ($connectedCables as $cc) {
+                $p1 = ['x' => floatval($cc['from_x']), 'y' => floatval($cc['from_y'])];
+                $p2 = ['x' => floatval($cc['to_x']),   'y' => floatval($cc['to_y'])];
+                $wps = !empty($cc['waypoints']) ? json_decode($cc['waypoints'], true) : [];
+                $pts = array_merge([$p1], is_array($wps) ? $wps : [], [$p2]);
+                $dist = 0.0;
+                for ($i = 0; $i < count($pts) - 1; $i++) {
+                    $dx = (($pts[$i+1]['x'] - $pts[$i]['x']) / 100.0) * $rw;
+                    $dy = (($pts[$i+1]['y'] - $pts[$i]['y']) / 100.0) * $rh;
+                    $dist += sqrt($dx * $dx + $dy * $dy);
+                }
+                $tot = round($dist + floatval($cc['slack_drop_meters']), 2);
+                $upLen->execute([$tot, $cc['id']]);
+            }
+        }
+
         echo json_encode(['success' => true, 'action' => 'updated', 'message' => "Node '{$deviceId}' updated"]);
     } else {
         $insert = $pdo->prepare("

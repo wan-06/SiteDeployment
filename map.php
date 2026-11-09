@@ -226,6 +226,129 @@ $imageExists = file_exists($imagePath);
         .tc-desc { font-size: 0.72rem; color: rgba(255,255,255,0.45); }
         .tag-mono { font-family:'SF Mono','Cascadia Code','Consolas',monospace; font-size:0.75rem; background:#E5E7EB; color:#111; padding:2px 6px; border-radius:4px; font-weight:700; }
 
+        /* ── INTERACTIVE CABLE ROUTES & LENGTH CALCULATOR ── */
+        .btn-cable-toggle, .btn-cable-schedule, .btn-scale-calibrate {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 12px; border-radius: var(--radius-pill);
+            border: 1px solid var(--border); background: var(--surface);
+            font-family: var(--font); font-size: 0.75rem; font-weight: 600;
+            cursor: pointer; transition: var(--transition); color: var(--text-muted);
+        }
+        .btn-cable-toggle:hover, .btn-cable-schedule:hover, .btn-scale-calibrate:hover {
+            border-color: var(--dark); color: var(--text);
+        }
+        .btn-cable-toggle.active {
+            background: #2563eb; border-color: #1d4ed8; color: #fff;
+            box-shadow: 0 1px 6px rgba(37, 99, 235, 0.35);
+        }
+        .btn-cable-schedule {
+            background: rgba(185,255,102,0.15); border-color: rgba(25,26,35,0.2); color: var(--dark);
+        }
+        .btn-cable-schedule:hover {
+            background: var(--lime); border-color: var(--dark); color: var(--dark);
+        }
+        .btn-scale-calibrate {
+            background: var(--bg); font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .cable-svg-layer {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 4; overflow: visible;
+        }
+        .cable-group { pointer-events: all; cursor: pointer; }
+        .cable-path-glow {
+            stroke-linecap: round; stroke-linejoin: round;
+            fill: none; opacity: 0.22; transition: stroke-width 0.2s, opacity 0.2s;
+        }
+        .cable-path-core {
+            stroke-linecap: round; stroke-linejoin: round;
+            fill: none; transition: stroke-width 0.2s, stroke 0.2s;
+        }
+        .cable-path-dash {
+            stroke: #ffffff; stroke-width: 1.5; stroke-dasharray: 6 6;
+            stroke-linecap: round; fill: none; opacity: 0.75;
+            animation: cablePulse 1.2s linear infinite;
+        }
+        @keyframes cablePulse {
+            from { stroke-dashoffset: 24; }
+            to { stroke-dashoffset: 0; }
+        }
+        .cable-group:hover .cable-path-glow, .cable-group.active-selected .cable-path-glow {
+            opacity: 0.65; stroke-width: 12px; filter: drop-shadow(0 0 6px currentColor);
+        }
+        .cable-group:hover .cable-path-core, .cable-group.active-selected .cable-path-core {
+            stroke-width: 4px;
+        }
+
+        .cable-waypoint-handle {
+            r: 5; fill: #ffffff; stroke: #191A23; stroke-width: 2.5;
+            cursor: move; transition: transform 0.15s, r 0.15s; pointer-events: all;
+        }
+        .cable-waypoint-handle:hover, .cable-waypoint-handle:active {
+            r: 8; fill: var(--lime); stroke: var(--dark);
+        }
+
+        .cable-tag-badge {
+            font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 700;
+            fill: #ffffff; text-anchor: middle; dominant-baseline: central;
+            pointer-events: none; user-select: none;
+        }
+        .cable-tag-rect {
+            rx: 4; ry: 4; fill: #191A23; stroke: rgba(255,255,255,0.4); stroke-width: 1;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+
+        /* Routing crosshair mode */
+        .stage-routing-mode { cursor: crosshair !important; }
+        .routing-banner {
+            position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+            background: #191A23; color: #fff; padding: 6px 16px; border-radius: var(--radius-pill);
+            border: 1.5px solid var(--lime); box-shadow: var(--shadow-lg);
+            font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 10px;
+            z-index: 100;
+        }
+        .btn-finish-routing {
+            background: var(--lime); color: var(--dark); border: none; padding: 3px 10px;
+            border-radius: var(--radius-pill); font-size: 0.75rem; font-weight: 700; cursor: pointer;
+        }
+
+        /* Inspector Cable Section */
+        .cable-section-heading {
+            display: flex; flex-direction: column; gap: 4px;
+            padding-top: 14px; margin-top: 10px;
+            border-top: 1px dashed rgba(255,255,255,0.14);
+        }
+        .cable-calc-box {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: var(--radius-sm); padding: 8px 12px; margin: 8px 0;
+        }
+        .cable-calc-label { font-size: 0.72rem; color: #93c5fd; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+        .cable-calc-val { font-size: 1.15rem; font-weight: 800; font-family: 'IBM Plex Mono', monospace; color: #60a5fa; }
+        .cable-action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
+        .btn-cable-act {
+            padding: 6px 10px; font-size: 0.74rem; font-weight: 600; border-radius: var(--radius-sm);
+            border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.85); cursor: pointer; transition: var(--transition);
+            display: inline-flex; align-items: center; justify-content: center; gap: 5px; font-family: inherit;
+        }
+        .btn-cable-act:hover { background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3); }
+        .btn-cable-act.primary { background: #3b82f6; border-color: #2563eb; color: #fff; }
+        .btn-cable-act.primary:hover { background: #2563eb; }
+        .btn-cable-act.danger { color: #f87171; border-color: rgba(239, 68, 68, 0.4); }
+        .btn-cable-act.danger:hover { background: #ef4444; color: #fff; }
+
+        /* Cable Schedule Modal */
+        .cable-modal-dialog { max-width: 920px; width: 95%; max-height: 90vh; }
+        .bom-cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .bom-card {
+            background: #FAFAFA; border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px;
+        }
+        .bom-card .bom-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); }
+        .bom-card .bom-val { font-size: 1.35rem; font-weight: 800; color: var(--dark); margin: 4px 0; font-family: 'IBM Plex Mono', monospace; }
+        .bom-card .bom-sub { font-size: 0.72rem; color: #0284c7; font-weight: 600; }
+        .cable-schedule-table-wrap { max-height: 380px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+
         /* ── CAMERA FOV DIRECTIONAL CONES ── */
         .btn-fov-toggle {
             display: inline-flex; align-items: center; gap: 6px;
@@ -583,10 +706,21 @@ $imageExists = file_exists($imagePath);
                         <button id="mapSearchClear" type="button" class="search-clear-btn" style="display:none;" title="Clear search">✕</button>
                     </div>
                 </div>
-                <div style="display:flex; align-items:center; gap:10px;">
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                     <button type="button" id="btnToggleFov" class="btn-fov-toggle active" title="Toggle camera field-of-view directional cones">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><circle cx="12" cy="13" r="4"/></svg>
                         <span id="fovToggleText">FoV: ON</span>
+                    </button>
+                    <button type="button" id="btnToggleCables" class="btn-cable-toggle active" title="Toggle structured cable runs &amp; measured lengths">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 12h8m4 0h4M12 4v8m0 0v8"/><circle cx="12" cy="12" r="3"/><circle cx="4" cy="12" r="2"/><circle cx="20" cy="12" r="2"/></svg>
+                        <span id="cableToggleText">Cables: ON</span>
+                    </button>
+                    <button type="button" id="btnOpenCableSchedule" class="btn-cable-schedule" onclick="openCableScheduleModal()" title="View Cable Pulling Schedule &amp; BOM Material Breakdown">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        <span>Cable Schedule</span>
+                    </button>
+                    <button type="button" id="btnOpenScaleModal" class="btn-scale-calibrate" onclick="openScaleModal()" title="Calibrate floorplan physical dimensions (Width &amp; Height in meters)">
+                        <span>📐 <span id="toolbarScaleLabel"><?= floatval($blueprint['real_width_meters'] ?? 60.0) ?>m × <?= floatval($blueprint['real_height_meters'] ?? 40.0) ?>m</span></span>
                     </button>
                     <span style="font-size:0.75rem;color:var(--text-muted);font-weight:600;" id="pinCount">0 pins</span>
                 </div>
@@ -595,6 +729,7 @@ $imageExists = file_exists($imagePath);
                 <?php if ($imageExists): ?>
                     <div class="blueprint-stage" id="blueprintStage">
                         <img src="uploads/blueprints/<?= htmlspecialchars($blueprint['image_filename']) ?>" alt="Blueprint" id="blueprintImg">
+                        <svg id="cableSvgLayer" class="cable-svg-layer"></svg>
                         <svg id="fovSvgLayer" class="fov-svg-layer"></svg>
                     </div>
                 <?php else: ?>
@@ -714,10 +849,97 @@ $imageExists = file_exists($imagePath);
                     <div class="form-group"><label>Switch ID</label><input type="text" id="inputSwitch" placeholder="e.g. SW-MDF-01" disabled></div>
                     <div class="form-group"><label>Port No</label><input type="text" id="inputPort" placeholder="e.g. P01 (PoE)" disabled></div>
                 </div>
-                <div class="form-group"><label>Structured Cable Tag</label><input type="text" id="inputCable" placeholder="e.g. C-L2-014" disabled></div>
+                <div class="form-group"><label>Structured Cable Tag</label><input type="text" id="inputCable" placeholder="e.g. C-L2-014" disabled oninput="syncCableTagInput(this.value)"></div>
                 <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:8px;">
                     <div class="form-group"><label>Tested By</label><input type="text" id="inputTestedBy" placeholder="Technician name" disabled></div>
                     <div class="form-group"><label>Commission Date</label><input type="date" id="inputCommissionDate" disabled></div>
+                </div>
+
+                <!-- Structured Cabling & Conduit Routing Section -->
+                <div class="cable-section-heading">
+                    <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+                        <span class="tc-pill" style="background:#2563eb; color:#fff;">🖧 Cable Route &amp; Length</span>
+                        <span id="cableStatusBadge" class="tag-mono" style="font-size:0.68rem; background:rgba(255,255,255,0.08); color:#93c5fd;">No Cable</span>
+                    </div>
+                    <span class="tc-desc">Laluan Kabel &amp; Ukuran Panjang Sebenar (Meters)</span>
+                </div>
+
+                <div id="cableInspectorGroup" style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
+                    <div class="form-group">
+                        <label>Terminated At (Switch / Rack / Device)</label>
+                        <select id="inputCableToNode" disabled onchange="onCableDestinationChanged()">
+                            <option value="">-- No Direct Cable Link --</option>
+                        </select>
+                    </div>
+
+                    <div id="cableDetailsSubgroup" style="display:none; flex-direction:column; gap:8px;">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                            <div class="form-group">
+                                <label>Cable Type</label>
+                                <select id="inputCableType" disabled onchange="updateCurrentCableDetails()">
+                                    <option value="Cat6 UTP">Cat6 UTP (Blue)</option>
+                                    <option value="Cat6A STP">Cat6A STP (Purple)</option>
+                                    <option value="Fiber 4-Core">Fiber 4-Core (Orange)</option>
+                                    <option value="RG59 Coaxial">RG59 Coaxial (Black)</option>
+                                    <option value="2-Core Shielded">2-Core Shielded (Yellow)</option>
+                                    <option value="Power 3-Core">Power 3-Core (Red)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Conduit / Trunking</label>
+                                <select id="inputConduitType" disabled onchange="updateCurrentCableDetails()">
+                                    <option value="20mm PVC Conduit">20mm PVC Conduit</option>
+                                    <option value="25mm GI Conduit">25mm GI Conduit</option>
+                                    <option value="Cable Tray / Trunking">Cable Tray / Trunking</option>
+                                    <option value="Underfloor Trench">Underfloor Trench</option>
+                                    <option value="Exposed / Wall Clamped">Exposed / Wall Clamped</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                            <div class="form-group">
+                                <label>Slack Drop (Ceiling + Loop)</label>
+                                <div style="display:flex; align-items:center; gap:4px;">
+                                    <input type="number" id="inputSlackMeters" value="3.0" step="0.5" min="0" max="20" disabled onchange="updateCurrentCableDetails()" style="flex:1;">
+                                    <span style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">m</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Cable Status</label>
+                                <select id="inputCableStatus" disabled onchange="updateCurrentCableDetails()">
+                                    <option value="Planned">Planned</option>
+                                    <option value="Cable Pulled">Cable Pulled</option>
+                                    <option value="Hardware Mounted">Terminated</option>
+                                    <option value="Live">Live / Tested</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="cable-calc-box">
+                            <div>
+                                <div class="cable-calc-label">Total Measured Length</div>
+                                <div style="font-size:0.7rem; color:rgba(255,255,255,0.5);">Run + Drop Slack</div>
+                            </div>
+                            <div class="cable-calc-val"><span id="cableLiveLengthVal">0.0</span> m</div>
+                        </div>
+
+                        <div class="cable-action-btns">
+                            <button type="button" id="btnRouteMode" class="btn-cable-act primary" onclick="toggleRouteBendsMode()" title="Click on the floorplan to add corridor bend corners">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+                                <span>⚡ Route Bends</span>
+                            </button>
+                            <button type="button" class="btn-cable-act" onclick="autoOrthogonalRoute()" title="Auto route along clean 90-degree industrial hallway angles">
+                                <span>📐 90° Ortho</span>
+                            </button>
+                            <button type="button" class="btn-cable-act" onclick="straightenCableRoute()" title="Reset to straight line path">
+                                <span>Straighten</span>
+                            </button>
+                            <button type="button" class="btn-cable-act danger" onclick="deleteActiveCable()" title="Remove this cable link">
+                                <span>✕ Remove</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Site Photo Evidence Section -->
@@ -847,6 +1069,119 @@ $imageExists = file_exists($imagePath);
         </div>
     </div>
 
+    <!-- ═══ MODAL: CABLE SCHEDULE & BOM ESTIMATOR ═══ -->
+    <div id="cableScheduleModal" class="modal-overlay">
+        <div class="modal cable-modal-dialog">
+            <div class="modal-header">
+                <div>
+                    <h3 style="font-size:1.2rem; font-weight:800; display:flex; align-items:center; gap:8px;">
+                        <span>🖧 Structured Cabling Schedule &amp; BOM</span>
+                        <span class="tag-mono" id="bomScaleTag" style="font-size:0.75rem; background:#E5E7EB; color:#111;">60m × 40m</span>
+                    </h3>
+                    <p style="font-size:0.82rem; color:var(--text-muted); margin-top:2px;">Automated length estimation &amp; box consumption schedule for sub-contractors and ELV procurement.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('cableScheduleModal')">&times;</button>
+            </div>
+            <div class="modal-body" style="padding-top:16px;">
+                <!-- BOM Summary Cards -->
+                <div class="bom-cards-grid" id="bomCardsGrid">
+                    <div class="bom-card">
+                        <div class="bom-title">Total Cable Measured</div>
+                        <div class="bom-val" id="bomTotalMeters">0.0 m</div>
+                        <div class="bom-sub" id="bomTotalRuns">0 cable runs</div>
+                    </div>
+                    <div class="bom-card">
+                        <div class="bom-title">Cat6 UTP (305m Boxes)</div>
+                        <div class="bom-val" id="bomCat6Boxes">0 Box</div>
+                        <div class="bom-sub" id="bomCat6Sub">0m installed</div>
+                    </div>
+                    <div class="bom-card">
+                        <div class="bom-title">Cat6A / Shielded Cable</div>
+                        <div class="bom-val" id="bomOtherCables">0.0 m</div>
+                        <div class="bom-sub" id="bomOtherSub">Specialty conduits</div>
+                    </div>
+                </div>
+
+                <!-- Cable Table -->
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <div style="font-size:0.85rem; font-weight:700;">Detailed Cable Pulling List</div>
+                    <button type="button" class="btn btn-sm btn-lime" onclick="exportCableScheduleCsv()" style="font-size:0.78rem; padding:5px 14px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Export CSV (Excel)
+                    </button>
+                </div>
+
+                <div class="cable-schedule-table-wrap">
+                    <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                        <thead>
+                            <tr style="background:#F9FAFB; border-bottom:1.5px solid var(--border); text-align:left;">
+                                <th style="padding:10px 12px;">Tag</th>
+                                <th style="padding:10px 12px;">From (Source)</th>
+                                <th style="padding:10px 12px;">To (Termination)</th>
+                                <th style="padding:10px 12px;">Cable Spec</th>
+                                <th style="padding:10px 12px;">Conduit</th>
+                                <th style="padding:10px 12px; text-align:right;">Run (m)</th>
+                                <th style="padding:10px 12px; text-align:right;">Slack (m)</th>
+                                <th style="padding:10px 12px; text-align:right;">Total (m)</th>
+                                <th style="padding:10px 12px; text-align:center;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cableScheduleTableBody">
+                            <tr><td colspan="9" style="text-align:center; padding:30px; color:var(--text-muted);">Loading cable schedule...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding-top:12px;">
+                <button class="btn btn-sm" onclick="closeModal('cableScheduleModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ MODAL: SCALE CALIBRATION ═══ -->
+    <div id="scaleCalibrationModal" class="modal-overlay">
+        <div class="modal" style="max-width:480px;">
+            <div class="modal-header">
+                <h3>Floorplan Scale Calibration</h3>
+                <button class="modal-close" onclick="closeModal('scaleCalibrationModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:0.84rem; color:var(--text-muted); margin-bottom:16px;">
+                    Set the physical real-world dimensions of this floorplan. SiteDeploy automatically calculates the exact horizontal cable run length in meters.
+                </p>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+                    <div class="form-group">
+                        <label>Physical Width (Meters) *</label>
+                        <input type="number" id="inputScaleWidth" step="0.5" min="1" max="1000" placeholder="e.g. 60">
+                    </div>
+                    <div class="form-group">
+                        <label>Physical Height (Meters) *</label>
+                        <input type="number" id="inputScaleHeight" step="0.5" min="1" max="1000" placeholder="e.g. 40">
+                    </div>
+                </div>
+
+                <label style="font-size:0.75rem; font-weight:700; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:6px;">Quick Dimension Presets</label>
+                <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; margin-bottom:16px;">
+                    <button type="button" class="btn btn-sm btn-ghost" onclick="applyScalePreset(30, 20)" style="font-size:0.75rem; border:1px solid var(--border); padding:6px 4px;">Small Office<br><strong>30m × 20m</strong></button>
+                    <button type="button" class="btn btn-sm btn-ghost" onclick="applyScalePreset(60, 40)" style="font-size:0.75rem; border:1px solid var(--border); padding:6px 4px;">Commercial Floor<br><strong>60m × 40m</strong></button>
+                    <button type="button" class="btn btn-sm btn-ghost" onclick="applyScalePreset(120, 70)" style="font-size:0.75rem; border:1px solid var(--border); padding:6px 4px;">Warehouse / Plant<br><strong>120m × 70m</strong></button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-sm" onclick="closeModal('scaleCalibrationModal')">Cancel</button>
+                <button class="btn btn-lime btn-sm" onclick="saveScaleCalibration()">Save &amp; Recalculate Cables</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Routing Mode Banner -->
+    <div id="routingBanner" class="routing-banner" style="display:none;">
+        <span style="font-size:1.1rem;">⚡</span>
+        <span>Click on the floorplan to drop bend waypoints around walls &amp; corridors.</span>
+        <button type="button" class="btn-finish-routing" onclick="toggleRouteBendsMode(false)">✓ Finish Routing</button>
+    </div>
+
     <div class="toast-container" id="toastContainer"></div>
 
     <script>
@@ -866,6 +1201,15 @@ $imageExists = file_exists($imagePath);
         let isDraggingFovHandle = false;
         let selectedPhotoFile = null;
 
+        // Structured Cable & Scale variables
+        let bpRealWidthM   = <?= floatval($blueprint['real_width_meters'] ?? 60.0) ?>;
+        let bpRealHeightM  = <?= floatval($blueprint['real_height_meters'] ?? 40.0) ?>;
+        let cables = [];
+        let activeCable = null;
+        let cablesVisible = true;
+        let isRoutingMode = false;
+        let isDraggingWaypoint = false;
+
         const PIN_SVG = `<svg viewBox="0 0 32 40" fill="none"><path d="M16 0C7.2 0 0 7.2 0 16c0 12 16 24 16 24s16-12 16-24C32 7.2 24.8 0 16 0z" fill="#ef4444"/><circle cx="16" cy="15" r="7" fill="white" opacity="0.9"/><circle cx="16" cy="15" r="3" fill="#ef4444"/></svg>`;
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -873,6 +1217,8 @@ $imageExists = file_exists($imagePath);
             if (IMAGE_EXISTS) setupBlueprintClick();
             setupFilters();
             setupFovEventListeners();
+            setupCableEventListeners();
+            loadCables();
         });
 
         // ── CAMERA UTILITY HELPERS ──
@@ -1319,6 +1665,18 @@ $imageExists = file_exists($imagePath);
             document.getElementById('inputFovAngle').disabled = false;
             document.getElementById('inputFovDistance').disabled = false;
 
+            // Cable inputs
+            const cableToNode = document.getElementById('inputCableToNode');
+            if (cableToNode) cableToNode.disabled = false;
+            const cableType = document.getElementById('inputCableType');
+            if (cableType) cableType.disabled = false;
+            const conduitType = document.getElementById('inputConduitType');
+            if (conduitType) conduitType.disabled = false;
+            const slackM = document.getElementById('inputSlackMeters');
+            if (slackM) slackM.disabled = false;
+            const cableSt = document.getElementById('inputCableStatus');
+            if (cableSt) cableSt.disabled = false;
+
             const btnSave = document.getElementById('btnSave');
             btnSave.disabled = false;
             btnSave.classList.remove('btn-disabled-muted');
@@ -1352,6 +1710,18 @@ $imageExists = file_exists($imagePath);
             document.getElementById('inputFovDirection').disabled = true;
             document.getElementById('inputFovAngle').disabled = true;
             document.getElementById('inputFovDistance').disabled = true;
+
+            // Cable inputs
+            const cableToNode = document.getElementById('inputCableToNode');
+            if (cableToNode) cableToNode.disabled = true;
+            const cableType = document.getElementById('inputCableType');
+            if (cableType) cableType.disabled = true;
+            const conduitType = document.getElementById('inputConduitType');
+            if (conduitType) conduitType.disabled = true;
+            const slackM = document.getElementById('inputSlackMeters');
+            if (slackM) slackM.disabled = true;
+            const cableSt = document.getElementById('inputCableStatus');
+            if (cableSt) cableSt.disabled = true;
 
             const btnSave = document.getElementById('btnSave');
             btnSave.disabled = true;
@@ -1412,7 +1782,12 @@ $imageExists = file_exists($imagePath);
             const matchingNode = nodes.find(n => n.device_id === pin.dataset.deviceId);
             renderNodePhotos(matchingNode);
 
+            // Cable route sync
+            populateCableDestinationDropdown(matchingNode ? matchingNode.id : null);
+            syncInspectorCable(matchingNode ? matchingNode.id : null);
+
             renderFovCones();
+            renderCables();
         }
 
         // ── CLICK MAP ──
@@ -1421,11 +1796,17 @@ $imageExists = file_exists($imagePath);
             if (!stage) return;
 
             stage.addEventListener('click', (e) => {
-                if (isDraggingFovHandle) return;
+                if (isDraggingFovHandle || isDraggingWaypoint) return;
 
                 const rect = stage.getBoundingClientRect();
                 const x = ((e.clientX - rect.left) / rect.width * 100);
                 const y = ((e.clientY - rect.top)  / rect.height * 100);
+
+                if (isRoutingMode && activeCable) {
+                    addWaypointToActiveCable(parseFloat(x.toFixed(4)), parseFloat(y.toFixed(4)));
+                    return;
+                }
+
                 currentPosX = parseFloat(x.toFixed(4));
                 currentPosY = parseFloat(y.toFixed(4));
 
@@ -1487,7 +1868,11 @@ $imageExists = file_exists($imagePath);
                 document.getElementById('inputDeviceId').focus();
 
                 renderNodePhotos(null);
+                activeCable = null;
+                populateCableDestinationDropdown(null);
+                syncInspectorCable(null);
                 renderFovCones();
+                renderCables();
             });
         }
 
@@ -1534,7 +1919,7 @@ $imageExists = file_exists($imagePath);
             try {
                 const res = await fetch('api/save_node.php', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
                 const json = await res.json();
-                if (json.success) { showToast(json.message,'success'); await fetchNodes(); resetPanel(); }
+                if (json.success) { showToast(json.message,'success'); await fetchNodes(); await loadCables(); resetPanel(); }
                 else showToast(json.error||'Save failed','error');
             } catch(e) { showToast('Network error','error'); }
         }
@@ -1546,7 +1931,7 @@ $imageExists = file_exists($imagePath);
             try {
                 const res = await fetch('api/delete_node.php', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({blueprint_id:BLUEPRINT_ID, device_id:deviceId}) });
                 const json = await res.json();
-                if (json.success) { showToast(json.message,'success'); await fetchNodes(); resetPanel(); }
+                if (json.success) { showToast(json.message,'success'); await fetchNodes(); await loadCables(); resetPanel(); }
                 else showToast(json.error,'error');
             } catch(e) { showToast('Network error','error'); }
         }
@@ -1590,8 +1975,13 @@ $imageExists = file_exists($imagePath);
             document.getElementById('btnDelete').style.display = 'none';
 
             renderNodePhotos(null);
+            activeCable = null;
+            if (isRoutingMode) toggleRouteBendsMode(false);
+            populateCableDestinationDropdown(null);
+            syncInspectorCable(null);
             disableFormFields();
             renderFovCones();
+            renderCables();
         }
 
         // ── DELETE CURRENT BLUEPRINT (Owner or Admin) ──
@@ -1969,13 +2359,856 @@ $imageExists = file_exists($imagePath);
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 const modal = document.getElementById('photoLightboxModal');
+                const cableSched = document.getElementById('cableScheduleModal');
+                const scaleModal = document.getElementById('scaleCalibrationModal');
                 if (modal && modal.classList.contains('active')) {
                     closePhotoLightbox();
+                } else if (cableSched && cableSched.classList.contains('active')) {
+                    closeModal('cableScheduleModal');
+                } else if (scaleModal && scaleModal.classList.contains('active')) {
+                    closeModal('scaleCalibrationModal');
+                } else if (isRoutingMode) {
+                    toggleRouteBendsMode(false);
                 } else if (selectedPin || isNewPin) {
                     resetPanel();
                 }
             }
         });
+
+        // ══════════════════════════════════════════════════════════════
+        // ── INTERACTIVE CABLE ROUTING & LENGTH CALCULATOR FUNCTIONS ──
+        // ══════════════════════════════════════════════════════════════
+
+        function openModal(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('active');
+        }
+
+        function closeModal(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('active');
+        }
+
+        function setupCableEventListeners() {
+            const toggleBtn = document.getElementById('btnToggleCables');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => {
+                    cablesVisible = !cablesVisible;
+                    toggleBtn.classList.toggle('active', cablesVisible);
+                    document.getElementById('cableToggleText').textContent = cablesVisible ? `Cables: ON (${cables.length})` : 'Cables: OFF';
+                    renderCables();
+                });
+            }
+        }
+
+        function updateCableToolbarBadge() {
+            const toggleText = document.getElementById('cableToggleText');
+            if (toggleText && cablesVisible) {
+                toggleText.textContent = `Cables: ON (${cables.length})`;
+            }
+        }
+
+        async function loadCables() {
+            try {
+                const res = await fetch('api/cables_api.php?blueprint_id=' + BLUEPRINT_ID);
+                const json = await res.json();
+                if (json.success) {
+                    cables = json.cables || [];
+                    if (json.scale) {
+                        bpRealWidthM = parseFloat(json.scale.real_width_meters) || 60.0;
+                        bpRealHeightM = parseFloat(json.scale.real_height_meters) || 40.0;
+                        const scaleTxt = `${bpRealWidthM}m × ${bpRealHeightM}m`;
+                        const scaleEl = document.getElementById('toolbarScaleLabel');
+                        if (scaleEl) scaleEl.textContent = scaleTxt;
+                        const bomTag = document.getElementById('bomScaleTag');
+                        if (bomTag) bomTag.textContent = scaleTxt;
+                    }
+                    renderCables();
+                    updateCableToolbarBadge();
+
+                    if (selectedPin) {
+                        const devId = selectedPin.dataset.deviceId;
+                        const node = nodes.find(n => n.device_id === devId);
+                        if (node) syncInspectorCable(node.id);
+                    }
+                }
+            } catch (e) {
+                console.error('Error loading cables:', e);
+            }
+        }
+
+        function calcSegmentMeters(p1, p2) {
+            const dx = ((p2.x - p1.x) / 100.0) * bpRealWidthM;
+            const dy = ((p2.y - p1.y) / 100.0) * bpRealHeightM;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        function calcCableTotalLength(pStart, pEnd, waypoints, slackM) {
+            const pts = [pStart];
+            if (Array.isArray(waypoints)) {
+                for (const wp of waypoints) {
+                    if (wp && typeof wp.x === 'number' && typeof wp.y === 'number') {
+                        pts.push({ x: parseFloat(wp.x), y: parseFloat(wp.y) });
+                    }
+                }
+            }
+            pts.push(pEnd);
+
+            let horizontalRun = 0.0;
+            for (let i = 0; i < pts.length - 1; i++) {
+                horizontalRun += calcSegmentMeters(pts[i], pts[i + 1]);
+            }
+            return parseFloat((horizontalRun + parseFloat(slackM || 0)).toFixed(2));
+        }
+
+        function getCableColorByType(type) {
+            switch (type) {
+                case 'Cat6 UTP': return '#3b82f6';         // Standard Blue
+                case 'Cat6A STP': return '#8b5cf6';        // Shielded Purple
+                case 'Fiber 4-Core': return '#f97316';     // Orange Optical
+                case 'RG59 Coaxial': return '#10b981';     // Coaxial Green
+                case '2-Core Shielded': return '#eab308';  // Alarm / Sensor Yellow
+                case 'Power 3-Core': return '#ef4444';     // Power Red
+                default: return '#3b82f6';
+            }
+        }
+
+        function getPathMidpoint(points) {
+            if (!points || points.length === 0) return { x: 0, y: 0 };
+            if (points.length === 1) return points[0];
+            let total = 0;
+            const segLens = [];
+            for (let i = 0; i < points.length - 1; i++) {
+                const dx = points[i+1].x - points[i].x;
+                const dy = points[i+1].y - points[i].y;
+                const len = Math.sqrt(dx*dx + dy*dy);
+                segLens.push(len);
+                total += len;
+            }
+            const half = total / 2;
+            let accum = 0;
+            for (let i = 0; i < segLens.length; i++) {
+                if (accum + segLens[i] >= half || i === segLens.length - 1) {
+                    const rem = half - accum;
+                    const ratio = segLens[i] > 0 ? (rem / segLens[i]) : 0.5;
+                    return {
+                        x: points[i].x + (points[i+1].x - points[i].x) * ratio,
+                        y: points[i].y + (points[i+1].y - points[i].y) * ratio
+                    };
+                }
+                accum += segLens[i];
+            }
+            return points[0];
+        }
+
+        function renderCables() {
+            const svg = document.getElementById('cableSvgLayer');
+            if (!svg) return;
+            svg.innerHTML = '';
+            if (!cablesVisible || !IMAGE_EXISTS) return;
+
+            const img = document.getElementById('blueprintImg');
+            const vw = BP_WIDTH || (img && img.naturalWidth) || 1600;
+            const vh = BP_HEIGHT || (img && img.naturalHeight) || 1000;
+            svg.setAttribute('viewBox', `0 0 ${vw} ${vh}`);
+
+            cables.forEach(c => {
+                const fromNode = nodes.find(n => parseInt(n.id) === parseInt(c.from_node_id));
+                const toNode   = nodes.find(n => parseInt(n.id) === parseInt(c.to_node_id));
+
+                const fromX = fromNode ? parseFloat(fromNode.pos_x) : parseFloat(c.from_pos_x);
+                const fromY = fromNode ? parseFloat(fromNode.pos_y) : parseFloat(c.from_pos_y);
+                const toX   = toNode   ? parseFloat(toNode.pos_x)   : parseFloat(c.to_pos_x);
+                const toY   = toNode   ? parseFloat(toNode.pos_y)   : parseFloat(c.to_pos_y);
+
+                if (isNaN(fromX) || isNaN(fromY) || isNaN(toX) || isNaN(toY)) return;
+
+                const pStart = { x: (fromX / 100) * vw, y: (fromY / 100) * vh };
+                const pEnd   = { x: (toX / 100) * vw,   y: (toY / 100) * vh };
+
+                const isCableActive = (activeCable && parseInt(activeCable.id) === parseInt(c.id)) ||
+                                      (selectedPin && (
+                                          (fromNode && selectedPin.dataset.deviceId === fromNode.device_id) ||
+                                          (toNode && selectedPin.dataset.deviceId === toNode.device_id)
+                                      ));
+
+                const color = c.color || getCableColorByType(c.cable_type);
+                const waypoints = Array.isArray(c.waypoints) ? c.waypoints : [];
+
+                let d = `M ${pStart.x.toFixed(1)} ${pStart.y.toFixed(1)}`;
+                const allPoints = [{ x: pStart.x, y: pStart.y }];
+                waypoints.forEach(wp => {
+                    const px = (parseFloat(wp.x) / 100) * vw;
+                    const py = (parseFloat(wp.y) / 100) * vh;
+                    d += ` L ${px.toFixed(1)} ${py.toFixed(1)}`;
+                    allPoints.push({ x: px, y: py });
+                });
+                d += ` L ${pEnd.x.toFixed(1)} ${pEnd.y.toFixed(1)}`;
+                allPoints.push({ x: pEnd.x, y: pEnd.y });
+
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('class', 'cable-group' + (isCableActive ? ' active-selected' : ''));
+                g.setAttribute('data-cable-id', c.id);
+
+                // 1. Glow path
+                const glow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                glow.setAttribute('d', d);
+                glow.setAttribute('class', 'cable-path-glow');
+                glow.setAttribute('stroke', color);
+                glow.setAttribute('stroke-width', isCableActive ? '13' : '7');
+                g.appendChild(glow);
+
+                // 2. Core solid line
+                const core = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                core.setAttribute('d', d);
+                core.setAttribute('class', 'cable-path-core');
+                core.setAttribute('stroke', color);
+                core.setAttribute('stroke-width', isCableActive ? '4.5' : '2.8');
+                g.appendChild(core);
+
+                // 3. Pulse dash line
+                if (isCableActive || c.status === 'Cable Pulled' || c.status === 'Live') {
+                    const dash = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    dash.setAttribute('d', d);
+                    dash.setAttribute('class', 'cable-path-dash');
+                    g.appendChild(dash);
+                }
+
+                // 4. Central Tag Badge with rounded background
+                const mid = getPathMidpoint(allPoints);
+                const tagText = `${c.cable_label} · ${c.total_length_meters}m`;
+                const tagWidth = Math.max(90, tagText.length * 7 + 16);
+                const tagHeight = 22;
+
+                const tagG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                tagG.setAttribute('transform', `translate(${mid.x.toFixed(1)}, ${mid.y.toFixed(1)})`);
+
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', (-tagWidth / 2).toFixed(1));
+                rect.setAttribute('y', (-tagHeight / 2).toFixed(1));
+                rect.setAttribute('width', tagWidth);
+                rect.setAttribute('height', tagHeight);
+                rect.setAttribute('rx', '4');
+                rect.setAttribute('ry', '4');
+                rect.setAttribute('fill', isCableActive ? '#191A23' : '#292A32');
+                rect.setAttribute('stroke', isCableActive ? '#B9FF66' : color);
+                rect.setAttribute('stroke-width', isCableActive ? '2' : '1.2');
+                tagG.appendChild(rect);
+
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', '0');
+                text.setAttribute('y', '0');
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('dominant-baseline', 'central');
+                text.setAttribute('fill', isCableActive ? '#B9FF66' : '#ffffff');
+                text.setAttribute('font-family', "'IBM Plex Mono', monospace");
+                text.setAttribute('font-size', '10px');
+                text.setAttribute('font-weight', '700');
+                text.textContent = tagText;
+                tagG.appendChild(text);
+
+                g.appendChild(tagG);
+
+                // 5. Waypoint handles
+                if (isCableActive) {
+                    waypoints.forEach((wp, idx) => {
+                        const wx = (parseFloat(wp.x) / 100) * vw;
+                        const wy = (parseFloat(wp.y) / 100) * vh;
+
+                        const handle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        handle.setAttribute('cx', wx.toFixed(1));
+                        handle.setAttribute('cy', wy.toFixed(1));
+                        handle.setAttribute('r', '7');
+                        handle.setAttribute('class', 'cable-waypoint-handle');
+                        handle.setAttribute('title', `Waypoint #${idx + 1}: Drag to move corner, double-click to remove`);
+
+                        handle.addEventListener('mousedown', (e) => {
+                            e.stopPropagation();
+                            startWaypointDrag(c, idx, vw, vh);
+                        });
+
+                        handle.addEventListener('dblclick', (e) => {
+                            e.stopPropagation();
+                            removeWaypoint(c, idx);
+                        });
+
+                        g.appendChild(handle);
+                    });
+                }
+
+                g.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectCable(c);
+                });
+
+                svg.appendChild(g);
+            });
+        }
+
+        function startWaypointDrag(cable, idx, vw, vh) {
+            isDraggingWaypoint = true;
+            const stage = document.getElementById('blueprintStage');
+
+            function onMouseMove(e) {
+                if (!isDraggingWaypoint) return;
+                const rect = stage.getBoundingClientRect();
+                const xPercent = parseFloat(((e.clientX - rect.left) / rect.width * 100).toFixed(4));
+                const yPercent = parseFloat(((e.clientY - rect.top) / rect.height * 100).toFixed(4));
+
+                cable.waypoints[idx].x = Math.max(0, Math.min(100, xPercent));
+                cable.waypoints[idx].y = Math.max(0, Math.min(100, yPercent));
+
+                const fromNode = nodes.find(n => parseInt(n.id) === parseInt(cable.from_node_id));
+                const toNode   = nodes.find(n => parseInt(n.id) === parseInt(cable.to_node_id));
+                const pStart = { x: parseFloat(fromNode?.pos_x ?? cable.from_pos_x), y: parseFloat(fromNode?.pos_y ?? cable.from_pos_y) };
+                const pEnd   = { x: parseFloat(toNode?.pos_x ?? cable.to_pos_x),     y: parseFloat(toNode?.pos_y ?? cable.to_pos_y) };
+
+                cable.total_length_meters = calcCableTotalLength(pStart, pEnd, cable.waypoints, cable.slack_drop_meters);
+                const lenVal = document.getElementById('cableLiveLengthVal');
+                if (lenVal) lenVal.textContent = cable.total_length_meters.toFixed(1);
+
+                renderCables();
+            }
+
+            async function onMouseUp() {
+                isDraggingWaypoint = false;
+                window.removeEventListener('mousemove', onMouseMove);
+                window.removeEventListener('mouseup', onMouseUp);
+                await saveCableToServer(cable);
+                showToast(`Waypoint updated (${cable.total_length_meters}m)`, 'info');
+            }
+
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onMouseUp);
+        }
+
+        async function removeWaypoint(cable, idx) {
+            cable.waypoints.splice(idx, 1);
+            const fromNode = nodes.find(n => parseInt(n.id) === parseInt(cable.from_node_id));
+            const toNode   = nodes.find(n => parseInt(n.id) === parseInt(cable.to_node_id));
+            const pStart = { x: parseFloat(fromNode?.pos_x ?? cable.from_pos_x), y: parseFloat(fromNode?.pos_y ?? cable.from_pos_y) };
+            const pEnd   = { x: parseFloat(toNode?.pos_x ?? cable.to_pos_x),     y: parseFloat(toNode?.pos_y ?? cable.to_pos_y) };
+
+            cable.total_length_meters = calcCableTotalLength(pStart, pEnd, cable.waypoints, cable.slack_drop_meters);
+            const lenVal = document.getElementById('cableLiveLengthVal');
+            if (lenVal) lenVal.textContent = cable.total_length_meters.toFixed(1);
+
+            renderCables();
+            await saveCableToServer(cable);
+            showToast('Waypoint removed', 'info');
+        }
+
+        async function addWaypointToActiveCable(x, y) {
+            if (!activeCable) return;
+            if (!Array.isArray(activeCable.waypoints)) activeCable.waypoints = [];
+            activeCable.waypoints.push({ x, y });
+
+            const fromNode = nodes.find(n => parseInt(n.id) === parseInt(activeCable.from_node_id));
+            const toNode   = nodes.find(n => parseInt(n.id) === parseInt(activeCable.to_node_id));
+            const pStart = { x: parseFloat(fromNode?.pos_x ?? activeCable.from_pos_x), y: parseFloat(fromNode?.pos_y ?? activeCable.from_pos_y) };
+            const pEnd   = { x: parseFloat(toNode?.pos_x ?? activeCable.to_pos_x),     y: parseFloat(toNode?.pos_y ?? activeCable.to_pos_y) };
+
+            activeCable.total_length_meters = calcCableTotalLength(pStart, pEnd, activeCable.waypoints, activeCable.slack_drop_meters);
+            const lenVal = document.getElementById('cableLiveLengthVal');
+            if (lenVal) lenVal.textContent = activeCable.total_length_meters.toFixed(1);
+
+            renderCables();
+            await saveCableToServer(activeCable);
+            showToast(`Corner added (${x.toFixed(1)}%, ${y.toFixed(1)}%) · ${activeCable.total_length_meters}m`, 'success');
+        }
+
+        async function autoOrthogonalRoute() {
+            if (!activeCable) {
+                showToast('Please select a cable run first', 'info');
+                return;
+            }
+            const fromNode = nodes.find(n => parseInt(n.id) === parseInt(activeCable.from_node_id));
+            const toNode   = nodes.find(n => parseInt(n.id) === parseInt(activeCable.to_node_id));
+            if (!fromNode || !toNode) return;
+
+            const x1 = parseFloat(fromNode.pos_x);
+            const y1 = parseFloat(fromNode.pos_y);
+            const x2 = parseFloat(toNode.pos_x);
+            const y2 = parseFloat(toNode.pos_y);
+
+            const currentWp = activeCable.waypoints || [];
+            let newCorner = { x: x2, y: y1 };
+            if (currentWp.length === 1 && Math.abs(currentWp[0].x - x2) < 0.1 && Math.abs(currentWp[0].y - y1) < 0.1) {
+                newCorner = { x: x1, y: y2 };
+            }
+            activeCable.waypoints = [newCorner];
+
+            const pStart = { x: x1, y: y1 };
+            const pEnd   = { x: x2, y: y2 };
+            activeCable.total_length_meters = calcCableTotalLength(pStart, pEnd, activeCable.waypoints, activeCable.slack_drop_meters);
+            const lenVal = document.getElementById('cableLiveLengthVal');
+            if (lenVal) lenVal.textContent = activeCable.total_length_meters.toFixed(1);
+
+            renderCables();
+            await saveCableToServer(activeCable);
+            showToast(`90° corridor route applied (${activeCable.total_length_meters}m)`, 'success');
+        }
+
+        async function straightenCableRoute() {
+            if (!activeCable) return;
+            activeCable.waypoints = [];
+            const fromNode = nodes.find(n => parseInt(n.id) === parseInt(activeCable.from_node_id));
+            const toNode   = nodes.find(n => parseInt(n.id) === parseInt(activeCable.to_node_id));
+            const pStart = { x: parseFloat(fromNode?.pos_x ?? activeCable.from_pos_x), y: parseFloat(fromNode?.pos_y ?? activeCable.from_pos_y) };
+            const pEnd   = { x: parseFloat(toNode?.pos_x ?? activeCable.to_pos_x),     y: parseFloat(toNode?.pos_y ?? activeCable.to_pos_y) };
+
+            activeCable.total_length_meters = calcCableTotalLength(pStart, pEnd, [], activeCable.slack_drop_meters);
+            const lenVal = document.getElementById('cableLiveLengthVal');
+            if (lenVal) lenVal.textContent = activeCable.total_length_meters.toFixed(1);
+
+            renderCables();
+            await saveCableToServer(activeCable);
+            showToast(`Straight line path restored (${activeCable.total_length_meters}m)`, 'info');
+        }
+
+        async function saveCableToServer(cable) {
+            const payload = {
+                action: 'save',
+                id: cable.id || 0,
+                blueprint_id: BLUEPRINT_ID,
+                from_node_id: cable.from_node_id,
+                to_node_id: cable.to_node_id,
+                cable_label: cable.cable_label,
+                cable_type: cable.cable_type,
+                conduit_type: cable.conduit_type,
+                slack_drop_meters: cable.slack_drop_meters,
+                status: cable.status,
+                color: cable.color || getCableColorByType(cable.cable_type),
+                notes: cable.notes || '',
+                waypoints: cable.waypoints || []
+            };
+
+            try {
+                const res = await fetch('api/cables_api.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const json = await res.json();
+                if (json.success) {
+                    cable.id = json.id;
+                    cable.total_length_meters = json.total_length_meters;
+                    return true;
+                } else {
+                    showToast(json.error || 'Failed to save cable', 'error');
+                    return false;
+                }
+            } catch (e) {
+                showToast('Network error while saving cable route', 'error');
+                return false;
+            }
+        }
+
+        function selectCable(c) {
+            activeCable = c;
+            const fromNode = nodes.find(n => parseInt(n.id) === parseInt(c.from_node_id));
+            if (fromNode) {
+                const pin = document.querySelector(`.pin[data-device-id="${fromNode.device_id}"]`);
+                if (pin) selectPin(pin);
+            }
+            syncInspectorCable(c.from_node_id);
+            renderCables();
+        }
+
+        function populateCableDestinationDropdown(currentNodeId) {
+            const sel = document.getElementById('inputCableToNode');
+            if (!sel) return;
+            sel.innerHTML = '<option value="">-- No Direct Cable Link --</option>';
+
+            if (!currentNodeId) return;
+
+            const otherNodes = nodes.filter(n => parseInt(n.id) !== parseInt(currentNodeId));
+            otherNodes.sort((a, b) => {
+                const aIsHub = (a.type || '').toLowerCase().includes('rack') || (a.type || '').toLowerCase().includes('switch') || (a.type || '').toLowerCase().includes('nvr');
+                const bIsHub = (b.type || '').toLowerCase().includes('rack') || (b.type || '').toLowerCase().includes('switch') || (b.type || '').toLowerCase().includes('nvr');
+                if (aIsHub && !bIsHub) return -1;
+                if (!aIsHub && bIsHub) return 1;
+                return (a.device_id || '').localeCompare(b.device_id || '');
+            });
+
+            otherNodes.forEach(n => {
+                const opt = document.createElement('option');
+                opt.value = n.id;
+                opt.textContent = `${n.device_id} [${n.type || 'Node'}] (${n.status})`;
+                sel.appendChild(opt);
+            });
+        }
+
+        function syncInspectorCable(nodeId) {
+            const subgroup = document.getElementById('cableDetailsSubgroup');
+            const badge = document.getElementById('cableStatusBadge');
+            const sel = document.getElementById('inputCableToNode');
+            if (!sel) return;
+
+            if (!nodeId) {
+                if (subgroup) subgroup.style.display = 'none';
+                if (badge) {
+                    badge.textContent = 'No Cable';
+                    badge.style.background = 'rgba(255,255,255,0.08)';
+                    badge.style.color = '#93c5fd';
+                }
+                sel.value = '';
+                activeCable = null;
+                return;
+            }
+
+            const cable = cables.find(c => parseInt(c.from_node_id) === parseInt(nodeId) || parseInt(c.to_node_id) === parseInt(nodeId));
+
+            if (cable) {
+                activeCable = cable;
+                const targetId = parseInt(cable.from_node_id) === parseInt(nodeId) ? cable.to_node_id : cable.from_node_id;
+                sel.value = targetId;
+                if (subgroup) subgroup.style.display = 'flex';
+
+                document.getElementById('inputCableType').value    = cable.cable_type || 'Cat6 UTP';
+                document.getElementById('inputConduitType').value  = cable.conduit_type || '20mm PVC Conduit';
+                document.getElementById('inputSlackMeters').value  = parseFloat(cable.slack_drop_meters) || 3.0;
+                document.getElementById('inputCableStatus').value  = cable.status || 'Planned';
+                document.getElementById('cableLiveLengthVal').textContent = parseFloat(cable.total_length_meters).toFixed(1);
+
+                if (badge) {
+                    badge.textContent = `${cable.cable_label} · ${cable.total_length_meters}m`;
+                    badge.style.background = '#2563eb';
+                    badge.style.color = '#ffffff';
+                }
+            } else {
+                activeCable = null;
+                sel.value = '';
+                if (subgroup) subgroup.style.display = 'none';
+                document.getElementById('cableLiveLengthVal').textContent = '0.0';
+                if (badge) {
+                    badge.textContent = 'No Cable';
+                    badge.style.background = 'rgba(255,255,255,0.08)';
+                    badge.style.color = '#93c5fd';
+                }
+            }
+        }
+
+        async function onCableDestinationChanged() {
+            const sel = document.getElementById('inputCableToNode');
+            const toNodeId = parseInt(sel.value);
+
+            if (!selectedPin) return;
+            const devId = selectedPin.dataset.deviceId;
+            const fromNode = nodes.find(n => n.device_id === devId);
+            if (!fromNode) return;
+
+            if (!toNodeId) {
+                if (activeCable) {
+                    if (confirm(`Remove cable run '${activeCable.cable_label}'?`)) {
+                        await deleteActiveCable();
+                    } else {
+                        syncInspectorCable(fromNode.id);
+                    }
+                }
+                return;
+            }
+
+            const toNode = nodes.find(n => parseInt(n.id) === toNodeId);
+            if (!toNode) return;
+
+            let cable = cables.find(c => 
+                (parseInt(c.from_node_id) === parseInt(fromNode.id) && parseInt(c.to_node_id) === toNodeId) ||
+                (parseInt(c.to_node_id) === parseInt(fromNode.id) && parseInt(c.from_node_id) === toNodeId)
+            );
+
+            if (!cable) {
+                const cableTag = document.getElementById('inputCable').value.trim() || ('C-' + fromNode.device_id);
+                const pStart = { x: parseFloat(fromNode.pos_x), y: parseFloat(fromNode.pos_y) };
+                const pEnd   = { x: parseFloat(toNode.pos_x),   y: parseFloat(toNode.pos_y) };
+                const initSlack = 3.0;
+                const totalLen = calcCableTotalLength(pStart, pEnd, [], initSlack);
+
+                cable = {
+                    id: 0,
+                    blueprint_id: BLUEPRINT_ID,
+                    from_node_id: fromNode.id,
+                    to_node_id: toNode.id,
+                    from_device_id: fromNode.device_id,
+                    to_device_id: toNode.device_id,
+                    from_pos_x: fromNode.pos_x,
+                    from_pos_y: fromNode.pos_y,
+                    to_pos_x: toNode.pos_x,
+                    to_pos_y: toNode.pos_y,
+                    cable_label: cableTag,
+                    cable_type: 'Cat6 UTP',
+                    conduit_type: '20mm PVC Conduit',
+                    waypoints: [],
+                    slack_drop_meters: initSlack,
+                    total_length_meters: totalLen,
+                    status: 'Planned',
+                    color: '#3b82f6',
+                    notes: ''
+                };
+
+                const saved = await saveCableToServer(cable);
+                if (saved) {
+                    cables.push(cable);
+                    activeCable = cable;
+                    document.getElementById('inputCable').value = cableTag;
+                    syncInspectorCable(fromNode.id);
+                    renderCables();
+                    updateCableToolbarBadge();
+                    showToast(`Cable '${cableTag}' routed to ${toNode.device_id} (${totalLen}m)`, 'success');
+                }
+            } else {
+                activeCable = cable;
+                syncInspectorCable(fromNode.id);
+                renderCables();
+            }
+        }
+
+        async function updateCurrentCableDetails() {
+            if (!activeCable) return;
+
+            activeCable.cable_type         = document.getElementById('inputCableType').value;
+            activeCable.conduit_type       = document.getElementById('inputConduitType').value;
+            activeCable.slack_drop_meters   = parseFloat(document.getElementById('inputSlackMeters').value) || 0;
+            activeCable.status             = document.getElementById('inputCableStatus').value;
+            activeCable.color              = getCableColorByType(activeCable.cable_type);
+
+            const fromNode = nodes.find(n => parseInt(n.id) === parseInt(activeCable.from_node_id));
+            const toNode   = nodes.find(n => parseInt(n.id) === parseInt(activeCable.to_node_id));
+            const pStart = { x: parseFloat(fromNode?.pos_x ?? activeCable.from_pos_x), y: parseFloat(fromNode?.pos_y ?? activeCable.from_pos_y) };
+            const pEnd   = { x: parseFloat(toNode?.pos_x ?? activeCable.to_pos_x),     y: parseFloat(toNode?.pos_y ?? activeCable.to_pos_y) };
+
+            activeCable.total_length_meters = calcCableTotalLength(pStart, pEnd, activeCable.waypoints, activeCable.slack_drop_meters);
+            const lenVal = document.getElementById('cableLiveLengthVal');
+            if (lenVal) lenVal.textContent = activeCable.total_length_meters.toFixed(1);
+
+            const badge = document.getElementById('cableStatusBadge');
+            if (badge) badge.textContent = `${activeCable.cable_label} · ${activeCable.total_length_meters}m`;
+
+            renderCables();
+            await saveCableToServer(activeCable);
+        }
+
+        async function deleteActiveCable() {
+            if (!activeCable) return;
+            if (!confirm(`Delete cable route '${activeCable.cable_label}'?`)) return;
+
+            try {
+                const res = await fetch('api/cables_api.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete', id: activeCable.id })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    showToast('Cable route deleted', 'info');
+                    cables = cables.filter(c => c.id !== activeCable.id);
+                    activeCable = null;
+                    if (selectedPin) {
+                        const devId = selectedPin.dataset.deviceId;
+                        const node = nodes.find(n => n.device_id === devId);
+                        syncInspectorCable(node ? node.id : null);
+                    }
+                    renderCables();
+                    updateCableToolbarBadge();
+                } else {
+                    showToast(json.error || 'Failed to delete cable', 'error');
+                }
+            } catch (e) {
+                showToast('Network error while deleting cable', 'error');
+            }
+        }
+
+        function toggleRouteBendsMode(forcedState) {
+            if (!activeCable && (forcedState === true || (!isRoutingMode && forcedState === undefined))) {
+                showToast('Please select or create a cable run first to route bends', 'info');
+                return;
+            }
+            isRoutingMode = (forcedState !== undefined) ? forcedState : !isRoutingMode;
+            const banner = document.getElementById('routingBanner');
+            const btn = document.getElementById('btnRouteMode');
+
+            if (banner) banner.style.display = isRoutingMode ? 'flex' : 'none';
+            if (btn) {
+                btn.classList.toggle('active', isRoutingMode);
+                btn.innerHTML = isRoutingMode ? 
+                    '<span>✓ Finish Bends</span>' : 
+                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg><span>⚡ Route Bends</span>';
+            }
+            renderCables();
+        }
+
+        function syncCableTagInput(val) {
+            if (activeCable) {
+                activeCable.cable_label = val.trim();
+                const badge = document.getElementById('cableStatusBadge');
+                if (badge) badge.textContent = `${activeCable.cable_label} · ${activeCable.total_length_meters}m`;
+                renderCables();
+                clearTimeout(activeCable._saveTimer);
+                activeCable._saveTimer = setTimeout(() => {
+                    saveCableToServer(activeCable);
+                }, 600);
+            }
+        }
+
+        // ── SCALE CALIBRATION ──
+        function openScaleModal() {
+            document.getElementById('inputScaleWidth').value = bpRealWidthM;
+            document.getElementById('inputScaleHeight').value = bpRealHeightM;
+            openModal('scaleCalibrationModal');
+        }
+
+        function applyScalePreset(w, h) {
+            document.getElementById('inputScaleWidth').value = w;
+            document.getElementById('inputScaleHeight').value = h;
+        }
+
+        async function saveScaleCalibration() {
+            const w = parseFloat(document.getElementById('inputScaleWidth').value);
+            const h = parseFloat(document.getElementById('inputScaleHeight').value);
+
+            if (isNaN(w) || w <= 0 || isNaN(h) || h <= 0) {
+                showToast('Please enter valid positive dimensions for width and height in meters', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch('api/cables_api.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'update_scale',
+                        blueprint_id: BLUEPRINT_ID,
+                        real_width_meters: w,
+                        real_height_meters: h
+                    })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    bpRealWidthM = w;
+                    bpRealHeightM = h;
+                    const scaleTxt = `${w}m × ${h}m`;
+                    const scaleEl = document.getElementById('toolbarScaleLabel');
+                    if (scaleEl) scaleEl.textContent = scaleTxt;
+                    const bomTag = document.getElementById('bomScaleTag');
+                    if (bomTag) bomTag.textContent = scaleTxt;
+
+                    closeModal('scaleCalibrationModal');
+                    showToast(json.message || 'Scale updated and all cables recalculated!', 'success');
+                    await loadCables();
+                } else {
+                    showToast(json.error || 'Failed to update scale', 'error');
+                }
+            } catch (e) {
+                showToast('Network error while updating scale', 'error');
+            }
+        }
+
+        // ── CABLE SCHEDULE MODAL & CSV EXPORT ──
+        function openCableScheduleModal() {
+            renderCableScheduleTable();
+            openModal('cableScheduleModal');
+        }
+
+        function renderCableScheduleTable() {
+            const tbody = document.getElementById('cableScheduleTableBody');
+            if (!tbody) return;
+
+            if (cables.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:30px; color:var(--text-muted);">No structured cable routes created yet. Connect nodes using the Inspector panel.</td></tr>`;
+                document.getElementById('bomTotalMeters').textContent = '0.0 m';
+                document.getElementById('bomTotalRuns').textContent = '0 cable runs';
+                document.getElementById('bomCat6Boxes').textContent = '0 Box';
+                document.getElementById('bomCat6Sub').textContent = '0m installed';
+                document.getElementById('bomOtherCables').textContent = '0.0 m';
+                return;
+            }
+
+            let totalMeters = 0.0;
+            let cat6Meters = 0.0;
+            let otherMeters = 0.0;
+
+            tbody.innerHTML = cables.map(c => {
+                const fromNode = nodes.find(n => parseInt(n.id) === parseInt(c.from_node_id));
+                const toNode   = nodes.find(n => parseInt(n.id) === parseInt(c.to_node_id));
+                const fromDev  = fromNode ? fromNode.device_id : (c.from_device_id || 'Node #' + c.from_node_id);
+                const toDev    = toNode ? toNode.device_id : (c.to_device_id || 'Node #' + c.to_node_id);
+
+                const totalLen = parseFloat(c.total_length_meters);
+                const slack = parseFloat(c.slack_drop_meters);
+                const runM = Math.max(0, totalLen - slack);
+
+                totalMeters += totalLen;
+                if ((c.cable_type || '').includes('Cat6 UTP')) {
+                    cat6Meters += totalLen;
+                } else {
+                    otherMeters += totalLen;
+                }
+
+                return `
+                    <tr style="border-bottom:1px solid var(--border);">
+                        <td style="padding:10px 12px; font-weight:700;"><span class="tag-mono" style="background:#eef2ff; color:#3b82f6;">${esc(c.cable_label)}</span></td>
+                        <td style="padding:10px 12px; font-weight:600;">${esc(fromDev)}</td>
+                        <td style="padding:10px 12px; font-weight:600;">${esc(toDev)}</td>
+                        <td style="padding:10px 12px;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${c.color||getCableColorByType(c.cable_type)}; margin-right:5px;"></span>${esc(c.cable_type)}</td>
+                        <td style="padding:10px 12px; font-size:0.78rem; color:var(--text-muted);">${esc(c.conduit_type)}</td>
+                        <td style="padding:10px 12px; text-align:right; font-family:'IBM Plex Mono',monospace;">${runM.toFixed(1)}</td>
+                        <td style="padding:10px 12px; text-align:right; font-family:'IBM Plex Mono',monospace;">${slack.toFixed(1)}</td>
+                        <td style="padding:10px 12px; text-align:right; font-weight:700; font-family:'IBM Plex Mono',monospace; color:#2563eb;">${totalLen.toFixed(1)}</td>
+                        <td style="padding:10px 12px; text-align:center;"><span class="status-badge ${statusClass(c.status)}">${esc(c.status)}</span></td>
+                    </tr>
+                `;
+            }).join('');
+
+            const cat6Boxes = Math.ceil(cat6Meters / 305);
+            const cat6Leftover = (cat6Boxes * 305) - cat6Meters;
+
+            document.getElementById('bomTotalMeters').textContent = `${totalMeters.toFixed(1)} m`;
+            document.getElementById('bomTotalRuns').textContent = `${cables.length} cable run${cables.length !== 1 ? 's' : ''}`;
+            document.getElementById('bomCat6Boxes').textContent = `${cat6Boxes} Box${cat6Boxes !== 1 ? 'es' : ''}`;
+            document.getElementById('bomCat6Sub').textContent = `${cat6Meters.toFixed(1)}m installed · ${Math.max(0, cat6Leftover).toFixed(1)}m remainder`;
+            document.getElementById('bomOtherCables').textContent = `${otherMeters.toFixed(1)} m`;
+            document.getElementById('bomOtherSub').textContent = `Shielded & Specialty conduits`;
+        }
+
+        function exportCableScheduleCsv() {
+            if (cables.length === 0) {
+                showToast('No cable routes to export', 'info');
+                return;
+            }
+
+            const headers = ['Cable Tag', 'From (Source)', 'To (Termination)', 'Cable Spec', 'Conduit Type', 'Horizontal Run (m)', 'Slack Drop (m)', 'Total Length (m)', 'Status', 'Notes'];
+            const rows = cables.map(c => {
+                const fromNode = nodes.find(n => parseInt(n.id) === parseInt(c.from_node_id));
+                const toNode   = nodes.find(n => parseInt(n.id) === parseInt(c.to_node_id));
+                const fromDev  = fromNode ? fromNode.device_id : (c.from_device_id || 'Node #' + c.from_node_id);
+                const toDev    = toNode ? toNode.device_id : (c.to_device_id || 'Node #' + c.to_node_id);
+
+                const totalLen = parseFloat(c.total_length_meters);
+                const slack = parseFloat(c.slack_drop_meters);
+                const runM = Math.max(0, totalLen - slack);
+
+                return [
+                    c.cable_label,
+                    fromDev,
+                    toDev,
+                    c.cable_type,
+                    c.conduit_type,
+                    runM.toFixed(2),
+                    slack.toFixed(2),
+                    totalLen.toFixed(2),
+                    c.status,
+                    c.notes || ''
+                ].map(val => `"${String(val).replace(/"/g, '""')}"`);
+            });
+
+            const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `SiteDeploy_Cable_Schedule_BP${BLUEPRINT_ID}.csv`;
+            link.click();
+            showToast('Cable Schedule CSV exported successfully!', 'success');
+        }
 
         // Click outside stage on dark area resets selection / cancels unsaved pin
         const bpArea = document.getElementById('blueprintArea');

@@ -119,6 +119,86 @@ try {
             $pdo->exec("UPDATE `blueprints` SET `project_id` = 2 WHERE `id` = 1 AND `project_id` IS NULL");
             $pdo->exec("UPDATE `blueprints` SET `project_id` = 1 WHERE `name` LIKE '%Reckitt%' AND `project_id` IS NULL");
         }
+
+        // Auto-migration: ensure real-world scale (meters) columns exist in blueprints table
+        $scaleCheck = $pdo->query("SHOW COLUMNS FROM blueprints LIKE 'real_width_meters'")->fetch();
+        if (!$scaleCheck) {
+            $pdo->exec("
+                ALTER TABLE `blueprints`
+                ADD COLUMN `real_width_meters`  DECIMAL(8,2) NOT NULL DEFAULT 60.00 AFTER `image_height`,
+                ADD COLUMN `real_height_meters` DECIMAL(8,2) NOT NULL DEFAULT 40.00 AFTER `real_width_meters`;
+            ");
+            // Set blueprint 1 to 60m x 40m, blueprint 2 (warehouse) to 120m x 70m
+            $pdo->exec("UPDATE `blueprints` SET `real_width_meters` = 60.00, `real_height_meters` = 40.00 WHERE `id` = 1");
+            $pdo->exec("UPDATE `blueprints` SET `real_width_meters` = 120.00, `real_height_meters` = 70.00 WHERE `id` = 2");
+        }
+
+        // Auto-migration: ensure cables table exists for Interactive Cable Routes & Length Calculator
+        $cableTableCheck = $pdo->query("SHOW TABLES LIKE 'cables'")->fetch();
+        if (!$cableTableCheck) {
+            $pdo->exec("
+                CREATE TABLE IF NOT EXISTS `cables` (
+                  `id`                  INT AUTO_INCREMENT PRIMARY KEY,
+                  `blueprint_id`        INT NOT NULL,
+                  `from_node_id`        INT NOT NULL,
+                  `to_node_id`          INT NOT NULL,
+                  `cable_label`         VARCHAR(50) NOT NULL,
+                  `cable_type`          VARCHAR(50) NOT NULL DEFAULT 'Cat6 UTP',
+                  `conduit_type`        VARCHAR(50) NOT NULL DEFAULT '20mm PVC',
+                  `waypoints`           TEXT NULL,
+                  `slack_drop_meters`   DECIMAL(5,2) NOT NULL DEFAULT 3.00,
+                  `total_length_meters` DECIMAL(8,2) NOT NULL DEFAULT 0.00,
+                  `status`              VARCHAR(50) NOT NULL DEFAULT 'Planned',
+                  `color`               VARCHAR(20) NOT NULL DEFAULT '#3b82f6',
+                  `notes`               TEXT NULL,
+                  `created_at`          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  `updated_at`          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                  INDEX `idx_cable_bp` (`blueprint_id`),
+                  FOREIGN KEY (`blueprint_id`) REFERENCES `blueprints`(`id`) ON DELETE CASCADE,
+                  FOREIGN KEY (`from_node_id`) REFERENCES `nodes`(`id`) ON DELETE CASCADE,
+                  FOREIGN KEY (`to_node_id`)   REFERENCES `nodes`(`id`) ON DELETE CASCADE
+                ) ENGINE=InnoDB;
+            ");
+
+            // Seed sample realistic cable routes for Blueprint 1 connecting to NVR-01 (ID 4)
+            // Blueprint 1 dimensions: 60m x 40m. NVR-01 at (14%, 70%)
+            $nodeCheck = $pdo->query("SELECT id, device_id FROM nodes WHERE blueprint_id = 1")->fetchAll(PDO::FETCH_KEY_PAIR);
+            // Flip to [device_id => id]
+            $devMap = array_flip($nodeCheck);
+            if (!empty($devMap['NVR-01']) && !empty($devMap['CAM-01'])) {
+                $nvrId = $devMap['NVR-01'];
+                
+                // CAM-01 (18.5%, 18%) -> NVR-01 (14%, 70%) with corridor waypoint
+                $c1Wp = json_encode([['x' => 18.5, 'y' => 50.0], ['x' => 14.0, 'y' => 50.0]]);
+                $c1Len = 34.50; // calculated ~31.5m run + 3m drop
+
+                // CAM-02 (95%, 50%) -> NVR-01 (14%, 70%) through central corridor
+                $c2Wp = json_encode([['x' => 50.0, 'y' => 50.0], ['x' => 14.0, 'y' => 50.0]]);
+                $c2Len = 59.80; // calculated ~56.8m run + 3m drop
+
+                // CAM-03 (50%, 22%) -> NVR-01 (14%, 70%)
+                $c3Wp = json_encode([['x' => 50.0, 'y' => 50.0], ['x' => 14.0, 'y' => 50.0]]);
+                $c3Len = 41.20;
+
+                // AP-01 (50%, 50%) -> NVR-01 (14%, 70%)
+                $apWp = json_encode([['x' => 14.0, 'y' => 50.0]]);
+                $apLen = 29.60;
+
+                // DOOR-01 (15%, 56%) -> NVR-01 (14%, 70%)
+                $doorLen = 9.20;
+
+                $pdo->exec("
+                    INSERT INTO `cables` 
+                    (`blueprint_id`, `from_node_id`, `to_node_id`, `cable_label`, `cable_type`, `conduit_type`, `waypoints`, `slack_drop_meters`, `total_length_meters`, `status`, `color`, `notes`) 
+                    VALUES
+                    (1, {$devMap['CAM-01']}, {$nvrId}, 'C-L2-001', 'Cat6 UTP', '20mm PVC Conduit', '{$c1Wp}', 3.00, {$c1Len}, 'Live', '#3b82f6', 'Main lobby ceiling conduit run'),
+                    (1, {$devMap['CAM-02']}, {$nvrId}, 'C-L2-002', 'Cat6 UTP', '25mm GI Conduit', '{$c2Wp}', 3.00, {$c2Len}, 'Hardware Mounted', '#3b82f6', 'East perimeter corridor trunking'),
+                    (1, {$devMap['CAM-03']}, {$nvrId}, 'C-L2-008', 'Cat6A STP', 'Cable Tray / Trunking', '{$c3Wp}', 3.00, {$c3Len}, 'Cable Pulled', '#8b5cf6', 'Conference suite ceiling tray'),
+                    (1, {$devMap['AP-01']},  {$nvrId}, 'C-L2-012', 'Cat6 UTP', '20mm PVC Conduit', '{$apWp}', 3.00, {$apLen}, 'Live', '#10b981', 'Corridor PoE Access Point run'),
+                    (1, {$devMap['DOOR-01']},{$nvrId}, 'C-SEC-001','2-Core Shielded', '20mm PVC Conduit', NULL, 2.00, {$doorLen}, 'Live', '#f59e0b', 'Server room card reader security link')
+                ");
+            }
+        }
     }
 } catch (PDOException $e) {
     // If database doesn't exist, try connecting to MySQL server to create it automatically

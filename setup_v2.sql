@@ -50,8 +50,10 @@ CREATE TABLE `blueprints` (
   `name`           VARCHAR(150) NOT NULL,
   `description`    TEXT,
   `image_filename` VARCHAR(255) NOT NULL,
-  `image_width`    INT UNSIGNED DEFAULT 0,
-  `image_height`   INT UNSIGNED DEFAULT 0,
+  `image_width`        INT UNSIGNED DEFAULT 0,
+  `image_height`       INT UNSIGNED DEFAULT 0,
+  `real_width_meters`  DECIMAL(8,2) NOT NULL DEFAULT 60.00,
+  `real_height_meters` DECIMAL(8,2) NOT NULL DEFAULT 40.00,
   `uploaded_by`    INT NOT NULL,
   `created_at`     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -164,3 +166,38 @@ INSERT INTO `node_photos` (`blueprint_id`, `device_id`, `filename`, `caption`, `
   (1, 'CAM-01', 'sample_cam01.svg', 'Main lobby dome camera ceiling mount & C-L2-001 cable tag', 1),
   (1, 'CAM-02', 'sample_cam02.svg', 'East emergency exit bullet camera & weatherproof conduit', 1),
   (1, 'NVR-01', 'sample_nvr01.svg', 'NOC 32-Channel NVR recorder & fiber patch panel', 1);
+
+-- =============================================
+-- CABLES (Structured Cabling & Conduit Routing)
+-- =============================================
+CREATE TABLE IF NOT EXISTS `cables` (
+  `id`                  INT AUTO_INCREMENT PRIMARY KEY,
+  `blueprint_id`        INT NOT NULL,
+  `from_node_id`        INT NOT NULL,
+  `to_node_id`          INT NOT NULL,
+  `cable_label`         VARCHAR(50) NOT NULL,
+  `cable_type`          VARCHAR(50) NOT NULL DEFAULT 'Cat6 UTP',
+  `conduit_type`        VARCHAR(50) NOT NULL DEFAULT '20mm PVC',
+  `waypoints`           TEXT NULL,
+  `slack_drop_meters`   DECIMAL(5,2) NOT NULL DEFAULT 3.00,
+  `total_length_meters` DECIMAL(8,2) NOT NULL DEFAULT 0.00,
+  `status`              VARCHAR(50) NOT NULL DEFAULT 'Planned',
+  `color`               VARCHAR(20) NOT NULL DEFAULT '#3b82f6',
+  `notes`               TEXT NULL,
+  `created_at`          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_cable_bp` (`blueprint_id`),
+  FOREIGN KEY (`blueprint_id`) REFERENCES `blueprints`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`from_node_id`) REFERENCES `nodes`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`to_node_id`)   REFERENCES `nodes`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+INSERT INTO `cables` 
+  (`blueprint_id`, `from_node_id`, `to_node_id`, `cable_label`, `cable_type`, `conduit_type`, `waypoints`, `slack_drop_meters`, `total_length_meters`, `status`, `color`, `notes`) 
+VALUES
+  (1, 1, 4, 'C-L2-001', 'Cat6 UTP', '20mm PVC Conduit', '[{"x":18.5,"y":50},{"x":14,"y":50}]', 3.00, 34.50, 'Live', '#3b82f6', 'Main lobby ceiling conduit run'),
+  (1, 2, 4, 'C-L2-002', 'Cat6 UTP', '25mm GI Conduit', '[{"x":50,"y":50},{"x":14,"y":50}]', 3.00, 59.80, 'Hardware Mounted', '#3b82f6', 'East perimeter corridor trunking'),
+  (1, 3, 4, 'C-L2-008', 'Cat6A STP', 'Cable Tray / Trunking', '[{"x":50,"y":50},{"x":14,"y":50}]', 3.00, 41.20, 'Cable Pulled', '#8b5cf6', 'Conference suite ceiling tray'),
+  (1, 5, 4, 'C-L2-012', 'Cat6 UTP', '20mm PVC Conduit', '[{"x":14,"y":50}]', 3.00, 29.60, 'Live', '#10b981', 'Corridor PoE Access Point run'),
+  (1, 6, 4, 'C-SEC-001','2-Core Shielded', '20mm PVC Conduit', NULL, 2.00, 9.20, 'Live', '#f59e0b', 'Server room card reader security link');
+
