@@ -55,6 +55,17 @@ try {
             ");
         }
 
+        // Auto-migration: ensure ping monitoring columns exist on nodes
+        $pingCheck = $pdo->query("SHOW COLUMNS FROM `nodes` LIKE 'ping_status'")->fetch();
+        if (!$pingCheck) {
+            $pdo->exec("
+                ALTER TABLE `nodes`
+                ADD COLUMN `ping_status` VARCHAR(20) NOT NULL DEFAULT 'unknown' AFTER `fov_distance`,
+                ADD COLUMN `ping_latency_ms` INT NULL AFTER `ping_status`,
+                ADD COLUMN `last_ping_at` DATETIME NULL AFTER `ping_latency_ms`
+            ");
+        }
+
         // Auto-migration: ensure node_photos table exists for Mobile Site Photo Attachments
         $photoTableCheck = $pdo->query("SHOW TABLES LIKE 'node_photos'")->fetch();
         if (!$photoTableCheck) {

@@ -796,13 +796,14 @@ $imagePath = 'uploads/blueprints/' . htmlspecialchars($blueprint['image_filename
                         <th>Switch / Port</th>
                         <th>Cable Tag</th>
                         <th>Status</th>
+                        <th>Network Health</th>
                         <th>Tested By</th>
                         <th>Date</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($nodes)): ?>
-                        <tr><td colspan="10" style="text-align:center; padding:30px; color:#6B7280;">No equipment recorded on this drawing yet.</td></tr>
+                        <tr><td colspan="11" style="text-align:center; padding:30px; color:#6B7280;">No equipment recorded on this drawing yet.</td></tr>
                     <?php else: ?>
                         <?php 
                         $rowIdx = 1;
@@ -836,6 +837,24 @@ $imagePath = 'uploads/blueprints/' . htmlspecialchars($blueprint['image_filename
                                     <span class="status-pill <?= $statusClass ?>">
                                         <?= htmlspecialchars($n['status']) ?>
                                     </span>
+                                </td>
+                                <td>
+                                    <?php 
+                                    $pingSt = strtolower($n['ping_status'] ?? 'unknown');
+                                    if (empty($n['ip_address'])): 
+                                    ?>
+                                        <span style="color:#9CA3AF; font-size:0.75rem;">—</span>
+                                    <?php elseif ($pingSt === 'online'): ?>
+                                        <span class="status-pill live" style="font-size:0.68rem; padding:2px 8px; font-weight:700;">
+                                            🟢 Online <?= !empty($n['ping_latency_ms']) ? "({$n['ping_latency_ms']}ms)" : '' ?>
+                                        </span>
+                                    <?php elseif ($pingSt === 'offline'): ?>
+                                        <span class="status-pill planned" style="font-size:0.68rem; padding:2px 8px; background:#FEE2E2; color:#DC2626; font-weight:700;">
+                                            🔴 Offline
+                                        </span>
+                                    <?php else: ?>
+                                        <span style="color:#6B7280; font-size:0.72rem;">⚪ Untested</span>
+                                    <?php endif; ?>
                                 </td>
                                 <td style="font-size:0.75rem;"><?= htmlspecialchars($n['tested_by'] ?: '—') ?></td>
                                 <td class="mono-text" style="font-size:0.72rem;"><?= htmlspecialchars($n['commission_date'] ?: '—') ?></td>

@@ -349,6 +349,117 @@ $imageExists = file_exists($imagePath);
         .bom-card .bom-sub { font-size: 0.72rem; color: #0284c7; font-weight: 600; }
         .cable-schedule-table-wrap { max-height: 380px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
 
+        /* ── REAL-TIME LIVE PING STATUS & NOC MONITOR ── */
+        .btn-live-ping, .btn-noc-modal {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 12px; border-radius: var(--radius-pill);
+            border: 1px solid var(--border); background: var(--surface);
+            font-family: var(--font); font-size: 0.75rem; font-weight: 600;
+            cursor: pointer; transition: var(--transition); color: var(--text-muted);
+        }
+        .btn-live-ping:hover, .btn-noc-modal:hover { border-color: var(--dark); color: var(--text); }
+        .btn-live-ping.active {
+            background: #10b981; border-color: #059669; color: #ffffff;
+            box-shadow: 0 1px 6px rgba(16, 185, 129, 0.4);
+        }
+        .btn-noc-modal {
+            background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: #047857;
+        }
+        .btn-noc-modal:hover {
+            background: #10b981; border-color: #059669; color: #ffffff;
+        }
+        .ping-radar-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: #9ca3af;
+            transition: background 0.3s;
+        }
+        .btn-live-ping.active .ping-radar-dot {
+            background: #ffffff;
+            box-shadow: 0 0 8px #ffffff;
+            animation: radarPulse 1.2s infinite;
+        }
+        @keyframes radarPulse {
+            0% { transform: scale(0.9); opacity: 1; }
+            50% { transform: scale(1.35); opacity: 0.5; }
+            100% { transform: scale(0.9); opacity: 1; }
+        }
+
+        /* Pin Ping Rings & Halos */
+        .pin-ping-pulse {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 38px; height: 38px; border-radius: 50%;
+            pointer-events: none; z-index: -1;
+        }
+        .pin.ping-online .pin-ping-pulse {
+            border: 2px solid #22c55e;
+            animation: pingPulseRing 2s ease-out infinite;
+        }
+        .pin.ping-offline .pin-ping-pulse {
+            border: 2.5px solid #ef4444;
+            animation: pingPulseRing 1.1s ease-out infinite;
+        }
+        @keyframes pingPulseRing {
+            0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.9; }
+            100% { transform: translate(-50%, -50%) scale(1.7); opacity: 0; }
+        }
+        .pin-ping-tag {
+            position: absolute; bottom: -18px; left: 50%;
+            transform: translateX(-50%);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 8.5px; font-weight: 700;
+            padding: 1px 4px; border-radius: 3px;
+            white-space: nowrap; pointer-events: none;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            line-height: 1.1;
+        }
+        .pin-ping-tag.online { background: #22c55e; color: #ffffff; }
+        .pin-ping-tag.offline { background: #ef4444; color: #ffffff; animation: blinkSlow 1s infinite; }
+        .pin-ping-tag.pinging { background: #f59e0b; color: #111827; }
+        @keyframes blinkSlow { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        /* Inspector Ping Badge & Button */
+        .ping-status-badge {
+            font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; font-weight: 700;
+            padding: 2px 7px; border-radius: var(--radius-pill);
+            display: inline-flex; align-items: center; gap: 4px;
+        }
+        .ping-status-badge.online  { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4); }
+        .ping-status-badge.offline { background: rgba(239, 68, 68, 0.25); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.5); }
+        .ping-status-badge.pinging { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+        .ping-status-badge.invalid { background: rgba(156, 163, 175, 0.2); color: #9ca3af; border: 1px solid rgba(156, 163, 175, 0.3); }
+        .ping-status-badge.unknown { background: rgba(255, 255, 255, 0.08); color: rgba(255,255,255,0.5); border: 1px solid rgba(255, 255, 255, 0.15); }
+        
+        .btn-ping-now {
+            padding: 4px 10px; font-size: 0.74rem; font-weight: 700;
+            background: rgba(37, 99, 235, 0.2); border: 1px solid rgba(37, 99, 235, 0.4);
+            color: #93c5fd; border-radius: var(--radius-sm); cursor: pointer;
+            transition: var(--transition); display: inline-flex; align-items: center; gap: 4px;
+        }
+        .btn-ping-now:hover:not(:disabled) {
+            background: #2563eb; color: #ffffff; border-color: #1d4ed8;
+        }
+        .btn-ping-now:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* NOC Monitor Modal */
+        .noc-modal-dialog { max-width: 980px; width: 95%; max-height: 90vh; }
+        .noc-summary-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 12px; margin-bottom: 16px;
+        }
+        .noc-stat-box {
+            background: #FAFAFA; border: 1px solid var(--border); border-radius: 8px;
+            padding: 12px 14px;
+        }
+        .noc-stat-title { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        .noc-stat-val { font-size: 1.35rem; font-weight: 800; font-family: 'IBM Plex Mono', monospace; color: var(--dark); margin: 3px 0; }
+        .noc-stat-sub { font-size: 0.7rem; color: var(--text-muted); }
+        .noc-control-bar {
+            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+            gap: 10px; margin-bottom: 12px; padding: 10px 14px;
+            background: #F3F4F6; border-radius: 8px; border: 1px solid var(--border);
+        }
+        .noc-table-wrap { max-height: 380px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+
         /* ── CAMERA FOV DIRECTIONAL CONES ── */
         .btn-fov-toggle {
             display: inline-flex; align-items: center; gap: 6px;
@@ -715,6 +826,14 @@ $imageExists = file_exists($imagePath);
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 12h8m4 0h4M12 4v8m0 0v8"/><circle cx="12" cy="12" r="3"/><circle cx="4" cy="12" r="2"/><circle cx="20" cy="12" r="2"/></svg>
                         <span id="cableToggleText">Cables: ON</span>
                     </button>
+                    <button type="button" id="btnToggleLivePing" class="btn-live-ping" onclick="toggleLivePingMonitoring()" title="Real-time Network Ping &amp; Heartbeat Monitoring">
+                        <span class="ping-radar-dot"></span>
+                        <span id="livePingBtnText">Live Ping: OFF</span>
+                    </button>
+                    <button type="button" id="btnOpenNocModal" class="btn-noc-modal" onclick="openNocModal()" title="View Network Operations Center (NOC) Device Monitor">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                        <span>NOC Monitor</span>
+                    </button>
                     <button type="button" id="btnOpenCableSchedule" class="btn-cable-schedule" onclick="openCableScheduleModal()" title="View Cable Pulling Schedule &amp; BOM Material Breakdown">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                         <span>Cable Schedule</span>
@@ -774,7 +893,21 @@ $imageExists = file_exists($imagePath);
                         <option value="Sensor">Sensor</option><option value="Generic" selected>Generic</option>
                     </select>
                 </div>
-                <div class="form-group"><label>IP Address</label><input type="text" id="inputIp" placeholder="e.g. 192.168.1.100" disabled></div>
+                <div class="form-group">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+                        <label style="margin-bottom:0;">IP Address</label>
+                        <span id="inspectorPingBadge" class="ping-status-badge unknown">Unknown</span>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        <input type="text" id="inputIp" placeholder="e.g. 192.168.1.100" disabled style="flex:1;" oninput="onIpAddressInput(this.value)">
+                        <button type="button" id="btnPingNodeNow" class="btn-ping-now" onclick="pingCurrentNode()" disabled title="Test device response time &amp; packet reply">
+                            <span id="btnPingNodeText">⚡ Ping</span>
+                        </button>
+                    </div>
+                    <div id="inspectorPingMeta" style="font-size:0.7rem; color:var(--text-muted); margin-top:4px; display:none;">
+                        <span id="inspectorPingDetails">—</span>
+                    </div>
+                </div>
                 <div class="form-group">
                     <label>Status</label>
                     <select id="inputStatus" disabled>
@@ -1175,6 +1308,105 @@ $imageExists = file_exists($imagePath);
         </div>
     </div>
 
+    <!-- ═══ MODAL: NOC COMMAND CENTER & LIVE PING MONITOR ═══ -->
+    <div id="nocMonitorModal" class="modal-overlay">
+        <div class="modal noc-modal-dialog">
+            <div class="modal-header">
+                <div>
+                    <h3 style="font-size:1.2rem; font-weight:800; display:flex; align-items:center; gap:8px;">
+                        <span>📡 Network Operations Command Center (NOC)</span>
+                        <span id="nocLiveBadge" class="ping-status-badge unknown" style="font-size:0.7rem;">Live Monitor Ready</span>
+                    </h3>
+                    <p style="font-size:0.82rem; color:var(--text-muted); margin-top:2px;">Real-time CCTV &amp; ELV device heartbeat, ICMP ping latency, and packet response monitor.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('nocMonitorModal')">&times;</button>
+            </div>
+            <div class="modal-body" style="padding-top:14px;">
+                <!-- Summary Metrics -->
+                <div class="noc-summary-grid">
+                    <div class="noc-stat-box">
+                        <div class="noc-stat-title">Network Devices</div>
+                        <div class="noc-stat-val" id="nocTotalDevices">0</div>
+                        <div class="noc-stat-sub" id="nocIpConfigured">0 IP configured</div>
+                    </div>
+                    <div class="noc-stat-box">
+                        <div class="noc-stat-title">Online &amp; Responsive</div>
+                        <div class="noc-stat-val" id="nocOnlineCount" style="color:#16a34a;">0</div>
+                        <div class="noc-stat-sub" id="nocOnlinePercent">0% health rate</div>
+                    </div>
+                    <div class="noc-stat-box">
+                        <div class="noc-stat-title">Offline / Packet Loss</div>
+                        <div class="noc-stat-val" id="nocOfflineCount" style="color:#dc2626;">0</div>
+                        <div class="noc-stat-sub" id="nocOfflineSub">No response</div>
+                    </div>
+                    <div class="noc-stat-box">
+                        <div class="noc-stat-title">Average Round-Trip</div>
+                        <div class="noc-stat-val" id="nocAvgLatency" style="color:#2563eb;">0.0 ms</div>
+                        <div class="noc-stat-sub">ICMP response time</div>
+                    </div>
+                </div>
+
+                <!-- Controls Bar -->
+                <div class="noc-control-bar">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <button type="button" class="btn btn-sm btn-lime" id="btnNocPingAll" onclick="pingAllDevices()" style="font-size:0.78rem; padding:6px 14px; font-weight:700;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                            <span id="btnNocPingAllText">Ping All Devices Now</span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-ghost" id="btnNocFilterOffline" onclick="filterMapOfflineOnly()" style="font-size:0.75rem; border:1px solid var(--border); padding:6px 10px; background:#fff;">
+                            <span>🔴 Show Offline on Floorplan</span>
+                        </button>
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; font-size:0.78rem;">
+                        <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+                            <input type="checkbox" id="nocSoundAlert" checked style="accent-color:#10b981;">
+                            <span>🔊 Sound Alert (Beep)</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:5px; cursor:pointer;" title="Simulate realistic CCTV camera pings for client presentation when offline">
+                            <input type="checkbox" id="nocDemoMode" onchange="toggleDemoPingMode(this.checked)" style="accent-color:#2563eb;">
+                            <span>🧪 Presentation Demo</span>
+                        </label>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span>Auto Refresh:</span>
+                            <select id="nocAutoInterval" onchange="changeNocInterval(this.value)" style="padding:4px 8px; border-radius:6px; border:1px solid var(--border); font-size:0.75rem; font-family:inherit;">
+                                <option value="0">Manual</option>
+                                <option value="15000">Every 15s</option>
+                                <option value="30000" selected>Every 30s</option>
+                                <option value="60000">Every 60s</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Device Table -->
+                <div class="noc-table-wrap">
+                    <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                        <thead>
+                            <tr style="background:#F9FAFB; border-bottom:1.5px solid var(--border); text-align:left;">
+                                <th style="padding:10px 12px;">Device ID</th>
+                                <th style="padding:10px 12px;">Type</th>
+                                <th style="padding:10px 12px;">IP Address</th>
+                                <th style="padding:10px 12px;">Switch / Port</th>
+                                <th style="padding:10px 12px; text-align:center;">Network Status</th>
+                                <th style="padding:10px 12px; text-align:right;">Latency (ms)</th>
+                                <th style="padding:10px 12px; text-align:right;">Last Tested</th>
+                                <th style="padding:10px 12px; text-align:center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="nocDeviceTableBody">
+                            <tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-muted);">Loading NOC device inventory...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
+                <span id="nocLastScanText" style="font-size:0.72rem; color:var(--text-muted);">Last scan: Never</span>
+                <button class="btn btn-sm" onclick="closeModal('nocMonitorModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Floating Routing Mode Banner -->
     <div id="routingBanner" class="routing-banner" style="display:none;">
         <span style="font-size:1.1rem;">⚡</span>
@@ -1209,6 +1441,13 @@ $imageExists = file_exists($imagePath);
         let cablesVisible = true;
         let isRoutingMode = false;
         let isDraggingWaypoint = false;
+
+        // Live Ping & NOC Monitoring variables
+        let isLivePingActive = false;
+        let livePingTimer = null;
+        let livePingIntervalMs = 15000;
+        let nocDemoMode = false;
+        let isBatchPinging = false;
 
         const PIN_SVG = `<svg viewBox="0 0 32 40" fill="none"><path d="M16 0C7.2 0 0 7.2 0 16c0 12 16 24 16 24s16-12 16-24C32 7.2 24.8 0 16 0z" fill="#ef4444"/><circle cx="16" cy="15" r="7" fill="white" opacity="0.9"/><circle cx="16" cy="15" r="3" fill="#ef4444"/></svg>`;
 
@@ -1530,11 +1769,15 @@ $imageExists = file_exists($imagePath);
         // ── FILTER & SEARCH MATCH CHECKER ──
         function nodeMatchesSearchAndFilter(n) {
             // 1. Status Filter Pill (activeFilter)
-            if (activeFilter !== 'all' && n.status !== activeFilter) {
+            if (activeFilter === 'ping-offline') {
+                if ((n.ping_status || '').toLowerCase() !== 'offline') return false;
+            } else if (activeFilter === 'ping-online') {
+                if ((n.ping_status || '').toLowerCase() !== 'online') return false;
+            } else if (activeFilter !== 'all' && n.status !== activeFilter) {
                 return false;
             }
 
-            // 2. Search query (matches status, notes, device_id, type, ip, mac, serial, switch, port, cable, tested_by)
+            // 2. Search query (matches status, notes, device_id, type, ip, mac, serial, switch, port, cable, tested_by, ping_status)
             if (currentSearchQuery) {
                 const q = currentSearchQuery.toLowerCase();
                 const matches =
@@ -1543,6 +1786,7 @@ $imageExists = file_exists($imagePath);
                     (n.device_id || '').toLowerCase().includes(q) ||
                     (n.type || '').toLowerCase().includes(q) ||
                     (n.ip_address || '').toLowerCase().includes(q) ||
+                    (n.ping_status || '').toLowerCase().includes(q) ||
                     (n.mac_address || '').toLowerCase().includes(q) ||
                     (n.serial_number || '').toLowerCase().includes(q) ||
                     (n.switch_id || '').toLowerCase().includes(q) ||
@@ -1594,17 +1838,47 @@ $imageExists = file_exists($imagePath);
                 if (!nodeMatchesSearchAndFilter(node)) return;
                 visibleCount++;
 
+                const pingSt = (node.ping_status || 'unknown').toLowerCase();
+                const hasIp = !!(node.ip_address && node.ip_address.trim());
+                let pingClass = '';
+                if (hasIp && pingSt === 'online') pingClass = ' ping-online';
+                else if (hasIp && pingSt === 'offline') pingClass = ' ping-offline';
+                else if (hasIp && pingSt === 'pinging') pingClass = ' ping-pinging';
+
+                let pingTagHtml = '';
+                if (hasIp) {
+                    if (pingSt === 'online') {
+                        const lat = node.ping_latency_ms ? `${node.ping_latency_ms}ms` : 'ON';
+                        pingTagHtml = `<span class="pin-ping-tag online">${lat}</span>`;
+                    } else if (pingSt === 'offline') {
+                        pingTagHtml = `<span class="pin-ping-tag offline">DOWN</span>`;
+                    } else if (pingSt === 'pinging') {
+                        pingTagHtml = `<span class="pin-ping-tag pinging">...</span>`;
+                    }
+                }
+
                 const pin = document.createElement('div');
-                pin.className = 'pin';
-                pin.innerHTML = PIN_SVG + `<span class="pin-label">${esc(node.device_id)}</span>`;
+                pin.className = 'pin' + pingClass;
+                pin.innerHTML = PIN_SVG +
+                    `<span class="pin-label">${esc(node.device_id)}</span>` +
+                    (hasIp ? `<div class="pin-ping-pulse"></div>` : '') +
+                    pingTagHtml;
+
                 pin.style.left = node.pos_x + '%';
                 pin.style.top  = node.pos_y + '%';
-                pin.title = `${node.device_id} [${node.status}] - ${node.type}${node.notes ? '\nNotes: ' + node.notes : ''}${node.ip_address ? '\nIP: ' + node.ip_address : ''}${node.cable_label ? '\nCable: ' + node.cable_label : ''}`;
+                pin.title = `${node.device_id} [${node.status}] - ${node.type}` +
+                    (node.ip_address ? `\nIP: ${node.ip_address}` : '') +
+                    (hasIp ? `\nPing: ${pingSt.toUpperCase()}${node.ping_latency_ms ? ' (' + node.ping_latency_ms + 'ms)' : ''}` : '') +
+                    (node.cable_label ? `\nCable: ${node.cable_label}` : '') +
+                    (node.notes ? `\nNotes: ${node.notes}` : '');
 
                 pin.dataset.deviceId       = node.device_id;
                 pin.dataset.type           = node.type;
                 pin.dataset.ip             = node.ip_address || '';
                 pin.dataset.status         = node.status;
+                pin.dataset.pingStatus     = pingSt;
+                pin.dataset.pingLatency    = node.ping_latency_ms || '';
+                pin.dataset.lastPingAt     = node.last_ping_at || '';
                 pin.dataset.notes          = node.notes || '';
                 pin.dataset.serialNumber   = node.serial_number || '';
                 pin.dataset.macAddress     = node.mac_address || '';
@@ -1680,6 +1954,10 @@ $imageExists = file_exists($imagePath);
             const btnSave = document.getElementById('btnSave');
             btnSave.disabled = false;
             btnSave.classList.remove('btn-disabled-muted');
+
+            const btnPing = document.getElementById('btnPingNodeNow');
+            const ipVal = (document.getElementById('inputIp').value || '').trim();
+            if (btnPing) btnPing.disabled = !ipVal;
         }
 
         function disableFormFields() {
@@ -1727,6 +2005,9 @@ $imageExists = file_exists($imagePath);
             btnSave.disabled = true;
             btnSave.classList.add('btn-disabled-muted');
             btnSave.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Pin a location first`;
+
+            const btnPing = document.getElementById('btnPingNodeNow');
+            if (btnPing) btnPing.disabled = true;
         }
 
         // ── SELECT PIN ──
@@ -1781,6 +2062,9 @@ $imageExists = file_exists($imagePath);
             // Site Photos
             const matchingNode = nodes.find(n => n.device_id === pin.dataset.deviceId);
             renderNodePhotos(matchingNode);
+
+            // Ping Health Sync
+            syncInspectorPing(matchingNode);
 
             // Cable route sync
             populateCableDestinationDropdown(matchingNode ? matchingNode.id : null);
@@ -1869,6 +2153,7 @@ $imageExists = file_exists($imagePath);
 
                 renderNodePhotos(null);
                 activeCable = null;
+                syncInspectorPing(null);
                 populateCableDestinationDropdown(null);
                 syncInspectorCable(null);
                 renderFovCones();
@@ -1977,6 +2262,7 @@ $imageExists = file_exists($imagePath);
             renderNodePhotos(null);
             activeCable = null;
             if (isRoutingMode) toggleRouteBendsMode(false);
+            syncInspectorPing(null);
             populateCableDestinationDropdown(null);
             syncInspectorCable(null);
             disableFormFields();
@@ -2361,12 +2647,15 @@ $imageExists = file_exists($imagePath);
                 const modal = document.getElementById('photoLightboxModal');
                 const cableSched = document.getElementById('cableScheduleModal');
                 const scaleModal = document.getElementById('scaleCalibrationModal');
+                const nocModal = document.getElementById('nocMonitorModal');
                 if (modal && modal.classList.contains('active')) {
                     closePhotoLightbox();
                 } else if (cableSched && cableSched.classList.contains('active')) {
                     closeModal('cableScheduleModal');
                 } else if (scaleModal && scaleModal.classList.contains('active')) {
                     closeModal('scaleCalibrationModal');
+                } else if (nocModal && nocModal.classList.contains('active')) {
+                    closeModal('nocMonitorModal');
                 } else if (isRoutingMode) {
                     toggleRouteBendsMode(false);
                 } else if (selectedPin || isNewPin) {
@@ -3216,6 +3505,495 @@ $imageExists = file_exists($imagePath);
             bpArea.addEventListener('click', (e) => {
                 if (e.target === bpArea) resetPanel();
             });
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // ── REAL-TIME LIVE PING STATUS & NOC MONITORING ──
+        // ══════════════════════════════════════════════════════════════
+
+        /**
+         * Synthesizes a two-tone audible warning alert using native Web Audio API
+         */
+        function playOfflineAlertSound() {
+            const soundEnabled = document.getElementById('nocSoundAlertToggle');
+            if (soundEnabled && !soundEnabled.checked) return;
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                const now = ctx.currentTime;
+
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, now);
+                osc.frequency.setValueAtTime(440, now + 0.12);
+
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            } catch (e) {
+                console.warn('Audio alert blocked or unsupported:', e);
+            }
+        }
+
+        /**
+         * Updates the Node Inspector panel's ping badge, latency, and test button
+         */
+        function syncInspectorPing(node) {
+            const badge = document.getElementById('inspectorPingBadge');
+            const metaWrap = document.getElementById('inspectorPingMeta');
+            const details = document.getElementById('inspectorPingDetails');
+            const btnPing = document.getElementById('btnPingNodeNow');
+            const ipInput = document.getElementById('inputIp');
+
+            if (!badge) return;
+
+            if (!node) {
+                badge.className = 'ping-status-badge unknown';
+                badge.textContent = 'Untested';
+                if (metaWrap) metaWrap.style.display = 'none';
+                if (details) details.textContent = '—';
+                if (btnPing) {
+                    const hasTypedIp = ipInput && ipInput.value && ipInput.value.trim().length > 0;
+                    btnPing.disabled = !hasTypedIp;
+                }
+                return;
+            }
+
+            const ip = (node.ip_address || '').trim();
+            const pingSt = (node.ping_status || 'unknown').toLowerCase();
+            const latency = node.ping_latency_ms;
+            const lastAt = node.last_ping_at;
+
+            badge.className = 'ping-status-badge ' + pingSt;
+
+            if (!ip) {
+                badge.className = 'ping-status-badge unknown';
+                badge.textContent = 'No IP Configured';
+                if (btnPing) btnPing.disabled = true;
+                if (metaWrap) metaWrap.style.display = 'none';
+                return;
+            }
+
+            if (btnPing) btnPing.disabled = false;
+
+            if (pingSt === 'online') {
+                badge.textContent = `🟢 Online ${latency ? '(' + latency + 'ms)' : ''}`;
+            } else if (pingSt === 'offline') {
+                badge.textContent = '🔴 Offline (Unreachable)';
+            } else if (pingSt === 'pinging') {
+                badge.textContent = '🟡 Pinging...';
+            } else if (pingSt === 'invalid') {
+                badge.textContent = '⚠️ Invalid IP';
+            } else {
+                badge.textContent = '⚪ Untested';
+            }
+
+            if (metaWrap && details) {
+                if (lastAt) {
+                    metaWrap.style.display = 'block';
+                    details.textContent = `Tested: ${lastAt}${latency ? ' · RTT: ' + latency + 'ms' : ''}`;
+                } else {
+                    metaWrap.style.display = 'none';
+                    details.textContent = '—';
+                }
+            }
+        }
+
+        /**
+         * Triggered when the user types in the IP Address field
+         */
+        function onIpAddressInput(val) {
+            const btn = document.getElementById('btnPingNodeNow');
+            if (btn) {
+                btn.disabled = !(val && val.trim().length > 0);
+            }
+        }
+
+        /**
+         * Pings currently selected node from Inspector
+         */
+        async function pingCurrentNode() {
+            if (!selectedPin) {
+                showToast('Please select a device node to ping', 'info');
+                return;
+            }
+
+            const devId = selectedPin.dataset.deviceId;
+            const matchingNode = nodes.find(n => n.device_id === devId);
+            if (!matchingNode) {
+                showToast('Please save node first before running live network ping', 'info');
+                return;
+            }
+
+            const currentIp = document.getElementById('inputIp').value.trim();
+            if (!currentIp) {
+                showToast('Please specify an IP address to ping', 'info');
+                document.getElementById('inputIp').focus();
+                return;
+            }
+
+            await pingSingleNode(matchingNode.id, false);
+        }
+
+        /**
+         * Pings a single node via API and updates UI
+         */
+        async function pingSingleNode(nodeId, silent = false) {
+            const node = nodes.find(n => parseInt(n.id) === parseInt(nodeId));
+            if (!node) return;
+
+            const btnPing = document.getElementById('btnPingNodeNow');
+            const btnText = document.getElementById('btnPingNodeText');
+            const originalText = btnText ? btnText.textContent : '⚡ Ping';
+
+            // Set loading state
+            if (btnPing) btnPing.disabled = true;
+            if (btnText) btnText.innerHTML = `<span class="spin">⏳</span> Testing...`;
+
+            // Update pin to pinging state
+            node.ping_status = 'pinging';
+            const pinEl = document.querySelector(`.pin[data-device-id="${node.device_id}"]`);
+            if (pinEl) {
+                pinEl.classList.remove('ping-online', 'ping-offline');
+                pinEl.classList.add('ping-pinging');
+                const tag = pinEl.querySelector('.pin-ping-tag');
+                if (tag) {
+                    tag.className = 'pin-ping-tag pinging';
+                    tag.textContent = '...';
+                }
+            }
+
+            if (selectedPin && selectedPin.dataset.deviceId === node.device_id) {
+                syncInspectorPing(node);
+            }
+
+            try {
+                const res = await fetch('api/ping_api.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'ping_node',
+                        node_id: node.id,
+                        demo_mode: nocDemoMode ? 1 : 0
+                    })
+                });
+
+                const json = await res.json();
+                if (json.success && json.data) {
+                    const d = json.data;
+                    const prevStatus = node.ping_status;
+                    node.ping_status = d.ping_status;
+                    node.ping_latency_ms = d.ping_latency_ms;
+                    node.last_ping_at = d.last_ping_at;
+
+                    // Re-render this pin
+                    if (pinEl) {
+                        pinEl.classList.remove('ping-online', 'ping-offline', 'ping-pinging');
+                        if (d.ping_status === 'online') pinEl.classList.add('ping-online');
+                        else if (d.ping_status === 'offline') pinEl.classList.add('ping-offline');
+
+                        let tag = pinEl.querySelector('.pin-ping-tag');
+                        if (!tag && node.ip_address) {
+                            tag = document.createElement('span');
+                            pinEl.appendChild(tag);
+                        }
+                        if (tag) {
+                            tag.className = 'pin-ping-tag ' + d.ping_status;
+                            tag.textContent = d.ping_status === 'online' ? (d.ping_latency_ms ? d.ping_latency_ms + 'ms' : 'ON') : (d.ping_status === 'offline' ? 'DOWN' : '...');
+                        }
+                    }
+
+                    if (selectedPin && selectedPin.dataset.deviceId === node.device_id) {
+                        syncInspectorPing(node);
+                    }
+
+                    if (d.ping_status === 'offline') {
+                        playOfflineAlertSound();
+                        if (!silent) showToast(`⚠️ Device ${node.device_id} is OFFLINE / unreachable!`, 'error');
+                    } else if (d.ping_status === 'online') {
+                        if (!silent) showToast(`✓ ${node.device_id} Online (${d.ping_latency_ms}ms)`, 'success');
+                    } else {
+                        if (!silent) showToast(`${node.device_id}: ${d.probe ? d.probe.message : 'Unknown'}`, 'info');
+                    }
+
+                    const nocModal = document.getElementById('nocMonitorModal');
+                    if (nocModal && nocModal.classList.contains('active')) {
+                        renderNocTable();
+                    }
+                } else {
+                    if (!silent) showToast(json.error || 'Ping probe failed', 'error');
+                }
+            } catch (err) {
+                if (!silent) showToast('Network probe failed: ' + err.message, 'error');
+            } finally {
+                if (btnPing) {
+                    const currentIp = document.getElementById('inputIp').value.trim();
+                    btnPing.disabled = !currentIp;
+                }
+                if (btnText) btnText.textContent = originalText;
+            }
+        }
+
+        /**
+         * Pings all devices on the current blueprint in a batch
+         */
+        async function pingAllDevices(isManual = false) {
+            if (isBatchPinging) return;
+
+            const ipNodes = nodes.filter(n => n.ip_address && n.ip_address.trim());
+            if (ipNodes.length === 0) {
+                if (isManual) showToast('No devices with IP addresses configured on this blueprint', 'info');
+                return;
+            }
+
+            isBatchPinging = true;
+
+            const btnPingAll = document.getElementById('nocPingAllBtn');
+            const toolbarPingBtn = document.getElementById('btnToggleLivePing');
+            if (btnPingAll) {
+                btnPingAll.disabled = true;
+                btnPingAll.innerHTML = `<span class="spin">⏳</span> Probing Network...`;
+            }
+
+            // Set all pins to pinging animation
+            ipNodes.forEach(n => {
+                const pinEl = document.querySelector(`.pin[data-device-id="${n.device_id}"]`);
+                if (pinEl) {
+                    const tag = pinEl.querySelector('.pin-ping-tag');
+                    if (tag) {
+                        tag.className = 'pin-ping-tag pinging';
+                        tag.textContent = '...';
+                    }
+                }
+            });
+
+            try {
+                const res = await fetch('api/ping_api.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'ping_batch',
+                        blueprint_id: BLUEPRINT_ID,
+                        demo_mode: nocDemoMode ? 1 : 0
+                    })
+                });
+
+                const json = await res.json();
+                const results = json.results || json.data;
+                if (json.success && results) {
+                    let newlyOffline = 0;
+
+                    results.forEach(item => {
+                        const n = nodes.find(x => parseInt(x.id) === parseInt(item.node_id));
+                        if (n) {
+                            const newStatus = (item.ping_status || item.status || 'unknown').toLowerCase();
+                            const newLatency = item.ping_latency_ms !== undefined ? item.ping_latency_ms : item.latency_ms;
+                            const wasOnline = (n.ping_status || '').toLowerCase() === 'online';
+
+                            n.ping_status = newStatus;
+                            n.ping_latency_ms = newLatency;
+                            n.last_ping_at = item.last_ping_at;
+
+                            if (wasOnline && newStatus === 'offline') {
+                                newlyOffline++;
+                            }
+                        }
+                    });
+
+                    // Re-render pins
+                    renderPins();
+
+                    // Sync inspector if a pin is active
+                    if (selectedPin) {
+                        const curDev = selectedPin.dataset.deviceId;
+                        const curNode = nodes.find(n => n.device_id === curDev);
+                        syncInspectorPing(curNode);
+                    }
+
+                    // Update NOC modal table & metrics
+                    renderNocTable();
+
+                    if (newlyOffline > 0) {
+                        playOfflineAlertSound();
+                        showToast(`⚠️ Alert: ${newlyOffline} device(s) dropped offline!`, 'error');
+                    } else if (isManual) {
+                        const onlineCount = results.filter(r => r.ping_status === 'online').length;
+                        showToast(`Network probe complete: ${onlineCount}/${results.length} devices online`, 'success');
+                    }
+                } else {
+                    if (isManual) showToast(json.error || 'Batch ping failed', 'error');
+                }
+            } catch (err) {
+                if (isManual) showToast('Network probe connection error: ' + err.message, 'error');
+            } finally {
+                isBatchPinging = false;
+                if (btnPingAll) {
+                    btnPingAll.disabled = false;
+                    btnPingAll.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Ping All Devices Now`;
+                }
+            }
+        }
+
+        /**
+         * Toggles periodic background heartbeat monitor
+         */
+        function toggleLivePingMonitoring() {
+            isLivePingActive = !isLivePingActive;
+            const btn = document.getElementById('btnToggleLivePing');
+            const dot = document.getElementById('livePingDot');
+            const text = document.getElementById('livePingText');
+
+            if (isLivePingActive) {
+                if (btn) btn.classList.add('active');
+                if (dot) dot.style.background = '#22c55e';
+                const sec = Math.round(livePingIntervalMs / 1000);
+                if (text) text.textContent = `Ping: LIVE (${sec}s)`;
+
+                // Ping immediately, then loop
+                pingAllDevices(false);
+                livePingTimer = setInterval(() => pingAllDevices(false), livePingIntervalMs);
+                showToast(`Live Network Heartbeat active (${sec}s interval)`, 'success');
+            } else {
+                if (btn) btn.classList.remove('active');
+                if (dot) dot.style.background = '#9CA3AF';
+                if (text) text.textContent = 'Live Ping: OFF';
+
+                if (livePingTimer) {
+                    clearInterval(livePingTimer);
+                    livePingTimer = null;
+                }
+                showToast('Live Network Heartbeat paused', 'info');
+            }
+        }
+
+        /**
+         * Changes interval for periodic heartbeat
+         */
+        function changeNocInterval(sec) {
+            livePingIntervalMs = parseInt(sec) * 1000;
+            if (isLivePingActive) {
+                clearInterval(livePingTimer);
+                livePingTimer = setInterval(() => pingAllDevices(false), livePingIntervalMs);
+                const text = document.getElementById('livePingText');
+                if (text) text.textContent = `Ping: LIVE (${sec}s)`;
+                showToast(`Ping interval updated to ${sec}s`, 'info');
+            }
+        }
+
+        /**
+         * Presentation Demo Mode Toggle (realistic simulated 4-32ms pings for client meetings)
+         */
+        function toggleDemoPingMode(checked) {
+            nocDemoMode = !!checked;
+            if (nocDemoMode) {
+                showToast('Presentation Demo Mode enabled: Simulating realistic device latency', 'info');
+            } else {
+                showToast('Real ICMP / TCP network probe mode active', 'info');
+            }
+        }
+
+        /**
+         * Opens the NOC Command Center modal and populates the device list
+         */
+        function openNocModal() {
+            openModal('nocMonitorModal');
+            renderNocTable();
+        }
+
+        /**
+         * Populates device rows and summary cards in NOC Command Center modal
+         */
+        function renderNocTable() {
+            const tbody = document.getElementById('nocDeviceTableBody');
+            if (!tbody) return;
+
+            const ipNodes = nodes.filter(n => n.ip_address && n.ip_address.trim());
+            const totalIp = ipNodes.length;
+            const onlineNodes = ipNodes.filter(n => (n.ping_status || '').toLowerCase() === 'online');
+            const offlineNodes = ipNodes.filter(n => (n.ping_status || '').toLowerCase() === 'offline');
+
+            let totalLat = 0, countLat = 0;
+            onlineNodes.forEach(n => {
+                if (n.ping_latency_ms) {
+                    totalLat += parseInt(n.ping_latency_ms);
+                    countLat++;
+                }
+            });
+            const avgLat = countLat > 0 ? (totalLat / countLat).toFixed(1) : 0;
+
+            const totEl = document.getElementById('nocTotalIpDevices');
+            const onEl = document.getElementById('nocOnlineCount');
+            const offEl = document.getElementById('nocOfflineCount');
+            const latEl = document.getElementById('nocAvgLatency');
+
+            if (totEl) totEl.textContent = totalIp;
+            if (onEl) onEl.textContent = onlineNodes.length;
+            if (offEl) offEl.textContent = offlineNodes.length;
+            if (latEl) latEl.textContent = countLat > 0 ? `${avgLat} ms` : '—';
+
+            if (totalIp === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:35px; color:var(--text-muted);">
+                    No devices have an IP address configured. Add IP addresses to camera/node pins to begin monitoring.
+                </td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = ipNodes.map(n => {
+                const st = (n.ping_status || 'unknown').toLowerCase();
+                let statusBadge = '<span class="status-badge unknown" style="background:#f3f4f6; color:#4b5563;">⚪ Untested</span>';
+                if (st === 'online') {
+                    statusBadge = `<span class="status-badge live" style="background:#dcfce7; color:#15803d; font-weight:700;">🟢 Online</span>`;
+                } else if (st === 'offline') {
+                    statusBadge = `<span class="status-badge planned" style="background:#fee2e2; color:#b91c1c; font-weight:700;">🔴 Offline</span>`;
+                } else if (st === 'pinging') {
+                    statusBadge = `<span class="status-badge" style="background:#fef3c7; color:#b45309; font-weight:700;">🟡 Probing...</span>`;
+                }
+
+                const latencyStr = n.ping_latency_ms ? `${n.ping_latency_ms} ms` : '—';
+                const lastPingStr = n.last_ping_at ? n.last_ping_at.split(' ')[1] || n.last_ping_at : 'Never';
+                const switchPort = (n.switch_id || n.port_no) ? `${esc(n.switch_id || 'SW')}${n.port_no ? ' / P' + esc(n.port_no) : ''}` : '—';
+
+                return `
+                    <tr style="border-bottom:1px solid var(--border);">
+                        <td style="padding:10px 12px; font-weight:700;">
+                            <a href="javascript:void(0)" onclick="closeModal('nocMonitorModal'); scrollToPin('${escAttr(n.device_id)}');" style="color:var(--dark); text-decoration:underline;">
+                                ${esc(n.device_id)}
+                            </a>
+                        </td>
+                        <td style="padding:10px 12px; font-size:0.8rem;">${esc(n.type)}</td>
+                        <td style="padding:10px 12px;"><span class="tag-mono" style="background:#f0fdf4; color:#166534;">${esc(n.ip_address)}</span></td>
+                        <td style="padding:10px 12px; font-size:0.78rem; color:var(--text-muted);">${switchPort}</td>
+                        <td style="padding:10px 12px; text-align:center;">${statusBadge}</td>
+                        <td style="padding:10px 12px; text-align:right; font-family:'IBM Plex Mono',monospace; font-weight:600;">${latencyStr}</td>
+                        <td style="padding:10px 12px; text-align:center; font-size:0.75rem; color:var(--text-muted);">${esc(lastPingStr)}</td>
+                        <td style="padding:10px 12px; text-align:center;">
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="pingSingleNode(${n.id}, false)" style="padding:2px 8px; font-size:0.72rem;">
+                                ⚡ Ping
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        /**
+         * Filters floorplan view to only display offline devices
+         */
+        function filterMapOfflineOnly() {
+            activeFilter = 'ping-offline';
+
+            document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.stat-card').forEach(sc => sc.classList.remove('active'));
+
+            closeModal('nocMonitorModal');
+            applyFilters();
+            showToast('Floorplan filtered: Displaying OFFLINE devices only', 'info');
         }
 
         // ── TOAST ──
