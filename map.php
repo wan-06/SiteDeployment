@@ -227,6 +227,23 @@ $imageExists = file_exists($imagePath);
         .tag-mono { font-family:'SF Mono','Cascadia Code','Consolas',monospace; font-size:0.75rem; background:#E5E7EB; color:#111; padding:2px 6px; border-radius:4px; font-weight:700; }
 
         /* ── INTERACTIVE CABLE ROUTES & LENGTH CALCULATOR ── */
+        .btn-cable-tool {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 14px; border-radius: var(--radius-pill);
+            border: 1.5px solid var(--lime); background: var(--dark);
+            color: var(--lime); font-family: var(--font); font-size: 0.76rem; font-weight: 700;
+            cursor: pointer; transition: var(--transition);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+        }
+        .btn-cable-tool:hover {
+            background: var(--lime); color: var(--dark); border-color: var(--dark);
+            transform: translateY(-1px);
+        }
+        .btn-cable-tool.active {
+            background: #2563eb !important; border-color: #1d4ed8 !important; color: #ffffff !important;
+            box-shadow: 0 0 12px rgba(37, 99, 235, 0.6) !important;
+        }
+
         .btn-cable-toggle, .btn-cable-schedule, .btn-scale-calibrate {
             display: inline-flex; align-items: center; gap: 6px;
             padding: 5px 12px; border-radius: var(--radius-pill);
@@ -248,8 +265,213 @@ $imageExists = file_exists($imagePath);
             background: var(--lime); border-color: var(--dark); color: var(--dark);
         }
         .btn-scale-calibrate {
-            background: var(--bg); font-family: 'IBM Plex Mono', monospace;
+            background: var(--bg); font-family: 'IBM Plex Mono', monospace; font-weight: 700;
         }
+
+        /* ── UNIVERSAL HIGH-END POPUP MODAL SYSTEM ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 99999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .modal-overlay.active {
+            display: flex !important;
+            opacity: 1;
+        }
+        .modal {
+            background: #ffffff;
+            color: var(--dark);
+            border-radius: 16px;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            transform: scale(0.96) translateY(12px);
+            transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .modal-overlay.active .modal {
+            transform: scale(1) translateY(0);
+        }
+        .modal-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            flex-shrink: 0;
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1;
+            transition: var(--transition);
+            padding: 0;
+            flex-shrink: 0;
+        }
+        .modal-close:hover {
+            background: #ef4444;
+            color: #ffffff;
+            border-color: #ef4444;
+            transform: rotate(90deg);
+        }
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            background: #f9fafb;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        /* Modal form controls */
+        .modal input[type="number"], .modal input[type="text"], .modal select {
+            background: #ffffff !important;
+            color: #111827 !important;
+            border: 1.5px solid #d1d5db !important;
+            border-radius: 8px !important;
+            padding: 10px 14px !important;
+            font-size: 0.92rem !important;
+            font-family: inherit !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            transition: var(--transition) !important;
+        }
+        .modal input:focus, .modal select:focus {
+            outline: none !important;
+            border-color: #2563eb !important;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+        }
+        .modal label {
+            font-size: 0.78rem !important;
+            font-weight: 700 !important;
+            color: #374151 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.4px !important;
+            margin-bottom: 6px !important;
+            display: block !important;
+        }
+        .preset-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px;
+        }
+        .preset-btn {
+            background: #f9fafb;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: var(--transition);
+            font-family: inherit;
+            color: var(--dark);
+        }
+        .preset-btn:hover {
+            background: #f3f4f6;
+            border-color: var(--dark);
+            transform: translateY(-1px);
+        }
+        .preset-btn.active {
+            background: #eff6ff;
+            border-color: #2563eb;
+        }
+        .preset-btn strong {
+            display: block;
+            color: #2563eb;
+            font-size: 0.88rem;
+            margin-top: 2px;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        /* ── STAGE CONNECTING CABLE INTERACTIVE STYLES ── */
+        .stage-connecting-cable {
+            cursor: crosshair !important;
+        }
+        .stage-connecting-cable .pin {
+            cursor: pointer !important;
+        }
+        .stage-connecting-cable .pin:hover {
+            transform: translate(-50%, -100%) scale(1.28) !important;
+            filter: drop-shadow(0 0 12px #3b82f6) !important;
+            z-index: 60 !important;
+        }
+        .pin.cable-connect-source {
+            transform: translate(-50%, -100%) scale(1.22) !important;
+            filter: drop-shadow(0 0 14px #22c55e) !important;
+            z-index: 55 !important;
+        }
+        .pin.cable-connect-source::after {
+            content: 'START';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #22c55e;
+            color: #fff;
+            font-size: 8px;
+            font-weight: 800;
+            padding: 1px 5px;
+            border-radius: 3px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+        }
+        .cable-connect-banner {
+            position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+            background: #111827; color: #f9fafb; padding: 8px 18px; border-radius: var(--radius-pill);
+            border: 1.5px solid var(--lime); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
+            font-size: 0.82rem; font-weight: 600; display: flex; align-items: center; gap: 12px;
+            z-index: 1000; animation: bannerSlideDown 0.2s ease-out;
+        }
+        @keyframes bannerSlideDown {
+            from { transform: translate(-50%, -16px); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        .btn-banner-cancel {
+            background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.25);
+            padding: 3px 10px; border-radius: var(--radius-pill); font-size: 0.72rem; font-weight: 700;
+            cursor: pointer; transition: var(--transition);
+        }
+        .btn-banner-cancel:hover { background: #ef4444; border-color: #ef4444; }
 
         .cable-svg-layer {
             position: absolute; inset: 0; width: 100%; height: 100%;
@@ -318,6 +540,10 @@ $imageExists = file_exists($imagePath);
             padding-top: 14px; margin-top: 10px;
             border-top: 1px dashed rgba(255,255,255,0.14);
         }
+        .cable-connect-invite-box {
+            background: rgba(37, 99, 235, 0.12); border: 1.5px dashed rgba(59, 130, 246, 0.4);
+            border-radius: var(--radius-sm); padding: 12px; text-align: center;
+        }
         .cable-calc-box {
             display: flex; align-items: center; justify-content: space-between;
             background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.3);
@@ -339,15 +565,15 @@ $imageExists = file_exists($imagePath);
         .btn-cable-act.danger:hover { background: #ef4444; color: #fff; }
 
         /* Cable Schedule Modal */
-        .cable-modal-dialog { max-width: 920px; width: 95%; max-height: 90vh; }
-        .bom-cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .cable-modal-dialog { max-width: 960px; width: 95%; max-height: 90vh; }
+        .bom-cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px; }
         .bom-card {
-            background: #FAFAFA; border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px;
+            background: #FAFAFA; border: 1.5px solid var(--border); border-radius: 10px; padding: 14px 18px;
         }
-        .bom-card .bom-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); }
-        .bom-card .bom-val { font-size: 1.35rem; font-weight: 800; color: var(--dark); margin: 4px 0; font-family: 'IBM Plex Mono', monospace; }
-        .bom-card .bom-sub { font-size: 0.72rem; color: #0284c7; font-weight: 600; }
-        .cable-schedule-table-wrap { max-height: 380px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+        .bom-card .bom-title { font-size: 0.74rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; }
+        .bom-card .bom-val { font-size: 1.45rem; font-weight: 800; color: var(--dark); margin: 6px 0; font-family: 'IBM Plex Mono', monospace; }
+        .bom-card .bom-sub { font-size: 0.74rem; color: #0284c7; font-weight: 600; }
+        .cable-schedule-table-wrap { max-height: 380px; overflow-y: auto; border: 1.5px solid var(--border); border-radius: 10px; }
 
         /* ── REAL-TIME LIVE PING STATUS & NOC MONITOR ── */
         .btn-live-ping, .btn-noc-modal {
@@ -818,13 +1044,24 @@ $imageExists = file_exists($imagePath);
                     </div>
                 </div>
                 <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                    <button type="button" id="btnToggleFov" class="btn-fov-toggle active" title="Toggle camera field-of-view directional cones">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><circle cx="12" cy="13" r="4"/></svg>
-                        <span id="fovToggleText">FoV: ON</span>
+                    <button type="button" id="btnConnectCableTool" class="btn-cable-tool" onclick="toggleConnectCableTool()" title="Click to draw and measure a cable between two devices">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        <span id="connectCableToolText">🔌 Connect Cable</span>
                     </button>
                     <button type="button" id="btnToggleCables" class="btn-cable-toggle active" title="Toggle structured cable runs &amp; measured lengths">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 12h8m4 0h4M12 4v8m0 0v8"/><circle cx="12" cy="12" r="3"/><circle cx="4" cy="12" r="2"/><circle cx="20" cy="12" r="2"/></svg>
                         <span id="cableToggleText">Cables: ON</span>
+                    </button>
+                    <button type="button" id="btnOpenScaleModal" class="btn-scale-calibrate" onclick="openScaleModal()" title="Calibrate floorplan physical dimensions (Width &amp; Height in meters)">
+                        <span>📐 <span id="toolbarScaleLabel"><?= floatval($blueprint['real_width_meters'] ?? 60.0) ?>m × <?= floatval($blueprint['real_height_meters'] ?? 40.0) ?>m</span></span>
+                    </button>
+                    <button type="button" id="btnOpenCableSchedule" class="btn-cable-schedule" onclick="openCableScheduleModal()" title="View Cable Pulling Schedule &amp; BOM Material Breakdown">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        <span>Cable Schedule</span>
+                    </button>
+                    <button type="button" id="btnToggleFov" class="btn-fov-toggle active" title="Toggle camera field-of-view directional cones">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><circle cx="12" cy="13" r="4"/></svg>
+                        <span id="fovToggleText">FoV: ON</span>
                     </button>
                     <button type="button" id="btnToggleLivePing" class="btn-live-ping" onclick="toggleLivePingMonitoring()" title="Real-time Network Ping &amp; Heartbeat Monitoring">
                         <span class="ping-radar-dot"></span>
@@ -833,13 +1070,6 @@ $imageExists = file_exists($imagePath);
                     <button type="button" id="btnOpenNocModal" class="btn-noc-modal" onclick="openNocModal()" title="View Network Operations Center (NOC) Device Monitor">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                         <span>NOC Monitor</span>
-                    </button>
-                    <button type="button" id="btnOpenCableSchedule" class="btn-cable-schedule" onclick="openCableScheduleModal()" title="View Cable Pulling Schedule &amp; BOM Material Breakdown">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                        <span>Cable Schedule</span>
-                    </button>
-                    <button type="button" id="btnOpenScaleModal" class="btn-scale-calibrate" onclick="openScaleModal()" title="Calibrate floorplan physical dimensions (Width &amp; Height in meters)">
-                        <span>📐 <span id="toolbarScaleLabel"><?= floatval($blueprint['real_width_meters'] ?? 60.0) ?>m × <?= floatval($blueprint['real_height_meters'] ?? 40.0) ?>m</span></span>
                     </button>
                     <span style="font-size:0.75rem;color:var(--text-muted);font-weight:600;" id="pinCount">0 pins</span>
                 </div>
@@ -850,6 +1080,11 @@ $imageExists = file_exists($imagePath);
                         <img src="uploads/blueprints/<?= htmlspecialchars($blueprint['image_filename']) ?>" alt="Blueprint" id="blueprintImg">
                         <svg id="cableSvgLayer" class="cable-svg-layer"></svg>
                         <svg id="fovSvgLayer" class="fov-svg-layer"></svg>
+                        <div id="cableConnectBanner" class="cable-connect-banner" style="display:none;">
+                            <span>🔌</span>
+                            <span id="cableConnectBannerText">Click the <strong>Starting Device</strong> on the floorplan</span>
+                            <button type="button" class="btn-banner-cancel" onclick="cancelConnectCableTool()">✕ Cancel</button>
+                        </div>
                     </div>
                 <?php else: ?>
                     <div class="missing-bp-warning">
@@ -998,17 +1233,38 @@ $imageExists = file_exists($imagePath);
                 </div>
 
                 <div id="cableInspectorGroup" style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
-                    <div class="form-group">
-                        <label>Terminated At (Switch / Rack / Device)</label>
-                        <select id="inputCableToNode" disabled onchange="onCableDestinationChanged()">
-                            <option value="">-- No Direct Cable Link --</option>
+                    <!-- State 1: When no cable is linked -->
+                    <div id="cableEmptyStateBox" class="cable-connect-invite-box">
+                        <div style="font-weight:700; font-size:0.82rem; color:#fff; display:flex; align-items:center; justify-content:center; gap:6px;">
+                            <span>🔌 No Cable Linked</span>
+                        </div>
+                        <div style="font-size:0.72rem; color:rgba(255,255,255,0.6); margin:4px 0 10px 0;">
+                            Connect this device to a network switch or server rack to calculate horizontal and drop length.
+                        </div>
+                        <button type="button" class="btn btn-sm btn-lime" onclick="startCableConnectFromSelectedNode()" style="width:100%; justify-content:center; font-weight:700; padding:7px 10px; margin-bottom:8px;">
+                            🔌 Connect Cable on Map
+                        </button>
+                        <div style="font-size:0.68rem; color:rgba(255,255,255,0.4); text-transform:uppercase; font-weight:700; margin-bottom:4px; text-align:left;">
+                            Or Select Destination:
+                        </div>
+                        <select id="inputCableToNode" disabled onchange="onCableDestinationChanged()" style="background:#191A23; border:1px solid rgba(255,255,255,0.2); color:#fff; width:100%; font-size:0.8rem; padding:6px 8px; border-radius:6px;">
+                            <option value="">-- Choose Target Device / Rack --</option>
                         </select>
                     </div>
 
+                    <!-- State 2: When cable is linked -->
                     <div id="cableDetailsSubgroup" style="display:none; flex-direction:column; gap:8px;">
+                        <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:6px; padding:8px 10px; display:flex; align-items:center; justify-content:space-between;">
+                            <div>
+                                <span style="font-size:0.68rem; color:rgba(255,255,255,0.5); text-transform:uppercase; font-weight:700;">Terminated To:</span>
+                                <div id="cableTargetName" style="font-weight:700; font-size:0.85rem; color:#fff;">—</div>
+                            </div>
+                            <span id="cableTypeColorDot" style="width:10px; height:10px; border-radius:50%; background:#3b82f6;"></span>
+                        </div>
+
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
                             <div class="form-group">
-                                <label>Cable Type</label>
+                                <label>Cable Spec</label>
                                 <select id="inputCableType" disabled onchange="updateCurrentCableDetails()">
                                     <option value="Cat6 UTP">Cat6 UTP (Blue)</option>
                                     <option value="Cat6A STP">Cat6A STP (Purple)</option>
@@ -1019,7 +1275,7 @@ $imageExists = file_exists($imagePath);
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Conduit / Trunking</label>
+                                <label>Conduit Spec</label>
                                 <select id="inputConduitType" disabled onchange="updateCurrentCableDetails()">
                                     <option value="20mm PVC Conduit">20mm PVC Conduit</option>
                                     <option value="25mm GI Conduit">25mm GI Conduit</option>
@@ -1032,7 +1288,7 @@ $imageExists = file_exists($imagePath);
 
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
                             <div class="form-group">
-                                <label>Slack Drop (Ceiling + Loop)</label>
+                                <label>Drop / Slack Loop</label>
                                 <div style="display:flex; align-items:center; gap:4px;">
                                     <input type="number" id="inputSlackMeters" value="3.0" step="0.5" min="0" max="20" disabled onchange="updateCurrentCableDetails()" style="flex:1;">
                                     <span style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">m</span>
@@ -1051,8 +1307,8 @@ $imageExists = file_exists($imagePath);
 
                         <div class="cable-calc-box">
                             <div>
-                                <div class="cable-calc-label">Total Measured Length</div>
-                                <div style="font-size:0.7rem; color:rgba(255,255,255,0.5);">Run + Drop Slack</div>
+                                <div class="cable-calc-label">Total Measured Cable</div>
+                                <div style="font-size:0.7rem; color:rgba(255,255,255,0.5);" id="cableRunSubtext">Run: 0.0m + Drop: 3.0m</div>
                             </div>
                             <div class="cable-calc-val"><span id="cableLiveLengthVal">0.0</span> m</div>
                         </div>
@@ -1066,7 +1322,7 @@ $imageExists = file_exists($imagePath);
                                 <span>📐 90° Ortho</span>
                             </button>
                             <button type="button" class="btn-cable-act" onclick="straightenCableRoute()" title="Reset to straight line path">
-                                <span>Straighten</span>
+                                <span>↺ Straighten</span>
                             </button>
                             <button type="button" class="btn-cable-act danger" onclick="deleteActiveCable()" title="Remove this cable link">
                                 <span>✕ Remove</span>
@@ -1203,17 +1459,17 @@ $imageExists = file_exists($imagePath);
     </div>
 
     <!-- ═══ MODAL: CABLE SCHEDULE & BOM ESTIMATOR ═══ -->
-    <div id="cableScheduleModal" class="modal-overlay">
-        <div class="modal cable-modal-dialog">
+    <div id="cableScheduleModal" class="modal-overlay" onclick="if(event.target===this)closeModal('cableScheduleModal')">
+        <div class="modal cable-modal-dialog" onclick="event.stopPropagation()">
             <div class="modal-header">
                 <div>
                     <h3 style="font-size:1.2rem; font-weight:800; display:flex; align-items:center; gap:8px;">
                         <span>🖧 Structured Cabling Schedule &amp; BOM</span>
-                        <span class="tag-mono" id="bomScaleTag" style="font-size:0.75rem; background:#E5E7EB; color:#111;">60m × 40m</span>
+                        <span class="tag-mono" id="bomScaleTag" style="font-size:0.75rem; background:#E5E7EB; color:#111;"><?= floatval($blueprint['real_width_meters'] ?? 60.0) ?>m × <?= floatval($blueprint['real_height_meters'] ?? 40.0) ?>m</span>
                     </h3>
                     <p style="font-size:0.82rem; color:var(--text-muted); margin-top:2px;">Automated length estimation &amp; box consumption schedule for sub-contractors and ELV procurement.</p>
                 </div>
-                <button class="modal-close" onclick="closeModal('cableScheduleModal')">&times;</button>
+                <button class="modal-close" onclick="closeModal('cableScheduleModal')" title="Close">✕</button>
             </div>
             <div class="modal-body" style="padding-top:16px;">
                 <!-- BOM Summary Cards -->
@@ -1236,9 +1492,9 @@ $imageExists = file_exists($imagePath);
                 </div>
 
                 <!-- Cable Table -->
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <div style="font-size:0.85rem; font-weight:700;">Detailed Cable Pulling List</div>
-                    <button type="button" class="btn btn-sm btn-lime" onclick="exportCableScheduleCsv()" style="font-size:0.78rem; padding:5px 14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div style="font-size:0.88rem; font-weight:700; color:var(--dark);">Detailed Cable Pulling List</div>
+                    <button type="button" class="btn btn-sm btn-lime" onclick="exportCableScheduleCsv()" style="font-size:0.78rem; padding:6px 16px; font-weight:700;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         Export CSV (Excel)
                     </button>
@@ -1260,57 +1516,77 @@ $imageExists = file_exists($imagePath);
                             </tr>
                         </thead>
                         <tbody id="cableScheduleTableBody">
-                            <tr><td colspan="9" style="text-align:center; padding:30px; color:var(--text-muted);">Loading cable schedule...</td></tr>
+                            <tr><td colspan="9" style="text-align:center; padding:30px; color:var(--text-muted);">No structured cable routes created yet. Use the <strong>Connect Cable</strong> tool to link devices.</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
-            <div class="modal-footer" style="padding-top:12px;">
-                <button class="btn btn-sm" onclick="closeModal('cableScheduleModal')">Close</button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm" onclick="closeModal('cableScheduleModal')">Close</button>
             </div>
         </div>
     </div>
 
     <!-- ═══ MODAL: SCALE CALIBRATION ═══ -->
-    <div id="scaleCalibrationModal" class="modal-overlay">
-        <div class="modal" style="max-width:480px;">
+    <div id="scaleCalibrationModal" class="modal-overlay" onclick="if(event.target===this)closeModal('scaleCalibrationModal')">
+        <div class="modal" style="max-width:520px;" onclick="event.stopPropagation()">
             <div class="modal-header">
-                <h3>Floorplan Scale Calibration</h3>
-                <button class="modal-close" onclick="closeModal('scaleCalibrationModal')">&times;</button>
+                <h3><span>📐 Floorplan Scale Calibration</span></h3>
+                <button class="modal-close" onclick="closeModal('scaleCalibrationModal')" title="Close">✕</button>
             </div>
             <div class="modal-body">
-                <p style="font-size:0.84rem; color:var(--text-muted); margin-bottom:16px;">
-                    Set the physical real-world dimensions of this floorplan. SiteDeploy automatically calculates the exact horizontal cable run length in meters.
+                <p style="font-size:0.84rem; color:var(--text-muted); margin-bottom:18px; line-height:1.45;">
+                    Set the physical real-world dimensions of this floorplan. SiteDeploy automatically converts pixel coordinates into true meters for all cable runs and BOM estimations.
                 </p>
 
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
-                    <div class="form-group">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px;">
+                    <div>
                         <label>Physical Width (Meters) *</label>
-                        <input type="number" id="inputScaleWidth" step="0.5" min="1" max="1000" placeholder="e.g. 60">
+                        <div style="position:relative;">
+                            <input type="number" id="inputScaleWidth" step="0.5" min="1" max="2000" placeholder="e.g. 120" style="padding-right:32px !important;">
+                            <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-weight:700; color:#6B7280; font-size:0.85rem;">m</span>
+                        </div>
                     </div>
-                    <div class="form-group">
+                    <div>
                         <label>Physical Height (Meters) *</label>
-                        <input type="number" id="inputScaleHeight" step="0.5" min="1" max="1000" placeholder="e.g. 40">
+                        <div style="position:relative;">
+                            <input type="number" id="inputScaleHeight" step="0.5" min="1" max="2000" placeholder="e.g. 70" style="padding-right:32px !important;">
+                            <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-weight:700; color:#6B7280; font-size:0.85rem;">m</span>
+                        </div>
                     </div>
                 </div>
 
-                <label style="font-size:0.75rem; font-weight:700; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:6px;">Quick Dimension Presets</label>
-                <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; margin-bottom:16px;">
-                    <button type="button" class="btn btn-sm btn-ghost" onclick="applyScalePreset(30, 20)" style="font-size:0.75rem; border:1px solid var(--border); padding:6px 4px;">Small Office<br><strong>30m × 20m</strong></button>
-                    <button type="button" class="btn btn-sm btn-ghost" onclick="applyScalePreset(60, 40)" style="font-size:0.75rem; border:1px solid var(--border); padding:6px 4px;">Commercial Floor<br><strong>60m × 40m</strong></button>
-                    <button type="button" class="btn btn-sm btn-ghost" onclick="applyScalePreset(120, 70)" style="font-size:0.75rem; border:1px solid var(--border); padding:6px 4px;">Warehouse / Plant<br><strong>120m × 70m</strong></button>
+                <div id="scaleRatioPreviewBox" style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:8px 12px; margin-bottom:18px; font-size:0.78rem; color:#1e40af; display:flex; align-items:center; gap:8px;">
+                    <span>ℹ️</span>
+                    <span id="scaleRatioPreviewText">Scale: 1 meter = ... pixels</span>
+                </div>
+
+                <label>Quick Dimension Presets</label>
+                <div class="preset-grid">
+                    <button type="button" class="preset-btn" onclick="applyScalePreset(30, 20)">
+                        Small Office
+                        <strong>30m × 20m</strong>
+                    </button>
+                    <button type="button" class="preset-btn" onclick="applyScalePreset(60, 40)">
+                        Commercial Floor
+                        <strong>60m × 40m</strong>
+                    </button>
+                    <button type="button" class="preset-btn" onclick="applyScalePreset(120, 70)">
+                        Warehouse / Plant
+                        <strong>120m × 70m</strong>
+                    </button>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-sm" onclick="closeModal('scaleCalibrationModal')">Cancel</button>
-                <button class="btn btn-lime btn-sm" onclick="saveScaleCalibration()">Save &amp; Recalculate Cables</button>
+                <button type="button" class="btn btn-sm" onclick="closeModal('scaleCalibrationModal')">Cancel</button>
+                <button type="button" class="btn btn-lime btn-sm" onclick="saveScaleCalibration()" style="font-weight:700;">💾 Save &amp; Recalculate Cables</button>
             </div>
         </div>
     </div>
 
     <!-- ═══ MODAL: NOC COMMAND CENTER & LIVE PING MONITOR ═══ -->
-    <div id="nocMonitorModal" class="modal-overlay">
-        <div class="modal noc-modal-dialog">
+    <div id="nocMonitorModal" class="modal-overlay" onclick="if(event.target===this)closeModal('nocMonitorModal')">
+        <div class="modal noc-modal-dialog" onclick="event.stopPropagation()">
             <div class="modal-header">
                 <div>
                     <h3 style="font-size:1.2rem; font-weight:800; display:flex; align-items:center; gap:8px;">
@@ -1319,7 +1595,7 @@ $imageExists = file_exists($imagePath);
                     </h3>
                     <p style="font-size:0.82rem; color:var(--text-muted); margin-top:2px;">Real-time CCTV &amp; ELV device heartbeat, ICMP ping latency, and packet response monitor.</p>
                 </div>
-                <button class="modal-close" onclick="closeModal('nocMonitorModal')">&times;</button>
+                <button class="modal-close" onclick="closeModal('nocMonitorModal')" title="Close">✕</button>
             </div>
             <div class="modal-body" style="padding-top:14px;">
                 <!-- Summary Metrics -->
@@ -1441,6 +1717,8 @@ $imageExists = file_exists($imagePath);
         let cablesVisible = true;
         let isRoutingMode = false;
         let isDraggingWaypoint = false;
+        let isConnectCableMode = false;
+        let cableConnectFromNode = null;
 
         // Live Ping & NOC Monitoring variables
         let isLivePingActive = false;
@@ -1894,7 +2172,14 @@ $imageExists = file_exists($imagePath);
                 pin.dataset.posX           = node.pos_x;
                 pin.dataset.posY           = node.pos_y;
                 pin.setAttribute('data-status', node.status);
-                pin.addEventListener('click', (e) => { e.stopPropagation(); selectPin(pin); });
+                pin.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (isConnectCableMode) {
+                        handlePinClickInCableConnectMode(node);
+                        return;
+                    }
+                    selectPin(pin);
+                });
                 stage.appendChild(pin);
             });
 
@@ -2081,6 +2366,7 @@ $imageExists = file_exists($imagePath);
 
             stage.addEventListener('click', (e) => {
                 if (isDraggingFovHandle || isDraggingWaypoint) return;
+                if (isConnectCableMode) return;
 
                 const rect = stage.getBoundingClientRect();
                 const x = ((e.clientX - rect.left) / rect.width * 100);
@@ -2656,6 +2942,8 @@ $imageExists = file_exists($imagePath);
                     closeModal('scaleCalibrationModal');
                 } else if (nocModal && nocModal.classList.contains('active')) {
                     closeModal('nocMonitorModal');
+                } else if (isConnectCableMode) {
+                    cancelConnectCableTool();
                 } else if (isRoutingMode) {
                     toggleRouteBendsMode(false);
                 } else if (selectedPin || isNewPin) {
@@ -2678,16 +2966,176 @@ $imageExists = file_exists($imagePath);
             if (el) el.classList.remove('active');
         }
 
+        // ── INTERACTIVE CONNECT CABLE TOOL FUNCTIONS ──
+        function toggleConnectCableTool() {
+            if (isConnectCableMode) {
+                cancelConnectCableTool();
+            } else {
+                let startNode = null;
+                if (selectedPin) {
+                    const devId = selectedPin.dataset.deviceId;
+                    startNode = nodes.find(n => n.device_id === devId) || null;
+                }
+                startConnectCableTool(startNode);
+            }
+        }
+
+        function startConnectCableTool(startNode = null) {
+            if (isRoutingMode) toggleRouteBendsMode(false);
+
+            isConnectCableMode = true;
+            cableConnectFromNode = startNode;
+
+            const btn = document.getElementById('btnConnectCableTool');
+            if (btn) btn.classList.add('active');
+
+            const stage = document.getElementById('blueprintStage');
+            if (stage) stage.classList.add('stage-connecting-cable');
+
+            const banner = document.getElementById('cableConnectBanner');
+            const bannerText = document.getElementById('cableConnectBannerText');
+            if (banner) banner.style.display = 'flex';
+
+            document.querySelectorAll('.pin.cable-connect-source').forEach(p => p.classList.remove('cable-connect-source'));
+
+            if (startNode) {
+                const pin = document.querySelector(`.pin[data-device-id="${startNode.device_id}"]`);
+                if (pin) pin.classList.add('cable-connect-source');
+                if (bannerText) {
+                    bannerText.innerHTML = `From: <strong style="color:#B9FF66;">${esc(startNode.device_id)}</strong> → Click the <strong>Target Device / Rack</strong> on the floorplan to connect`;
+                }
+                showToast(`Connecting from ${startNode.device_id}. Now click target device.`, 'info');
+            } else {
+                if (bannerText) {
+                    bannerText.innerHTML = `Click the <strong>Starting Device</strong> on the floorplan`;
+                }
+                showToast('Click any device pin on the floorplan to start cable route', 'info');
+            }
+        }
+
+        function cancelConnectCableTool() {
+            isConnectCableMode = false;
+            cableConnectFromNode = null;
+
+            const btn = document.getElementById('btnConnectCableTool');
+            if (btn) btn.classList.remove('active');
+
+            const stage = document.getElementById('blueprintStage');
+            if (stage) stage.classList.remove('stage-connecting-cable');
+
+            const banner = document.getElementById('cableConnectBanner');
+            if (banner) banner.style.display = 'none';
+
+            document.querySelectorAll('.pin.cable-connect-source').forEach(p => p.classList.remove('cable-connect-source'));
+        }
+
+        function startCableConnectFromSelectedNode() {
+            if (!selectedPin) {
+                showToast('Please select a device pin first', 'info');
+                return;
+            }
+            const devId = selectedPin.dataset.deviceId;
+            const node = nodes.find(n => n.device_id === devId);
+            if (!node) return;
+            startConnectCableTool(node);
+        }
+
+        function handlePinClickInCableConnectMode(node) {
+            if (!cableConnectFromNode) {
+                cableConnectFromNode = node;
+                const pin = document.querySelector(`.pin[data-device-id="${node.device_id}"]`);
+                if (pin) pin.classList.add('cable-connect-source');
+
+                const bannerText = document.getElementById('cableConnectBannerText');
+                if (bannerText) {
+                    bannerText.innerHTML = `From: <strong style="color:#B9FF66;">${esc(node.device_id)}</strong> → Now click the <strong>Target Device / Rack</strong> on the floorplan`;
+                }
+                showToast(`From ${node.device_id} → Now click target device on floorplan`, 'info');
+            } else {
+                if (parseInt(node.id) === parseInt(cableConnectFromNode.id)) {
+                    showToast('Cannot connect a cable to the same device! Select another device or rack.', 'warning');
+                    return;
+                }
+
+                const fromNode = cableConnectFromNode;
+                const toNode = node;
+
+                cancelConnectCableTool();
+                createCableBetweenNodes(fromNode, toNode);
+            }
+        }
+
+        async function createCableBetweenNodes(fromNode, toNode) {
+            const existingCable = cables.find(c => 
+                (parseInt(c.from_node_id) === parseInt(fromNode.id) && parseInt(c.to_node_id) === parseInt(toNode.id)) ||
+                (parseInt(c.to_node_id) === parseInt(fromNode.id) && parseInt(c.from_node_id) === parseInt(toNode.id))
+            );
+
+            if (existingCable) {
+                showToast(`Cable already exists between ${fromNode.device_id} and ${toNode.device_id}`, 'info');
+                selectCable(existingCable);
+                return;
+            }
+
+            const cableTag = 'C-' + fromNode.device_id;
+            const pStart = { x: parseFloat(fromNode.pos_x), y: parseFloat(fromNode.pos_y) };
+            const pEnd   = { x: parseFloat(toNode.pos_x),   y: parseFloat(toNode.pos_y) };
+            const initSlack = 3.0;
+            const totalLen = calcCableTotalLength(pStart, pEnd, [], initSlack);
+
+            const cable = {
+                id: 0,
+                blueprint_id: BLUEPRINT_ID,
+                from_node_id: fromNode.id,
+                to_node_id: toNode.id,
+                from_device_id: fromNode.device_id,
+                to_device_id: toNode.device_id,
+                from_pos_x: fromNode.pos_x,
+                from_pos_y: fromNode.pos_y,
+                to_pos_x: toNode.pos_x,
+                to_pos_y: toNode.pos_y,
+                cable_label: cableTag,
+                cable_type: 'Cat6 UTP',
+                conduit_type: '20mm PVC Conduit',
+                waypoints: [],
+                slack_drop_meters: initSlack,
+                total_length_meters: totalLen,
+                status: 'Planned',
+                color: '#3b82f6',
+                notes: ''
+            };
+
+            const saved = await saveCableToServer(cable);
+            if (saved) {
+                cables.push(cable);
+                activeCable = cable;
+                renderCables();
+                updateCableToolbarBadge();
+
+                const pin = document.querySelector(`.pin[data-device-id="${fromNode.device_id}"]`);
+                if (pin) selectPin(pin);
+
+                syncInspectorCable(fromNode.id);
+                showToast(`Cable '${cableTag}' linked to ${toNode.device_id} (${totalLen}m total)`, 'success');
+            }
+        }
+
         function setupCableEventListeners() {
             const toggleBtn = document.getElementById('btnToggleCables');
             if (toggleBtn) {
                 toggleBtn.addEventListener('click', () => {
                     cablesVisible = !cablesVisible;
                     toggleBtn.classList.toggle('active', cablesVisible);
-                    document.getElementById('cableToggleText').textContent = cablesVisible ? `Cables: ON (${cables.length})` : 'Cables: OFF';
+                    const countTxt = cables.length ? ` (${cables.length})` : '';
+                    document.getElementById('cableToggleText').textContent = cablesVisible ? `Cables: ON${countTxt}` : 'Cables: OFF';
                     renderCables();
                 });
             }
+
+            const scaleWInput = document.getElementById('inputScaleWidth');
+            const scaleHInput = document.getElementById('inputScaleHeight');
+            if (scaleWInput) scaleWInput.addEventListener('input', updateScaleRatioPreview);
+            if (scaleHInput) scaleHInput.addEventListener('input', updateScaleRatioPreview);
         }
 
         function updateCableToolbarBadge() {
@@ -3129,19 +3577,25 @@ $imageExists = file_exists($imagePath);
         }
 
         function syncInspectorCable(nodeId) {
+            const emptyBox = document.getElementById('cableEmptyStateBox');
             const subgroup = document.getElementById('cableDetailsSubgroup');
             const badge = document.getElementById('cableStatusBadge');
             const sel = document.getElementById('inputCableToNode');
-            if (!sel) return;
+            const targetNameEl = document.getElementById('cableTargetName');
+            const runSubtextEl = document.getElementById('cableRunSubtext');
+            const typeDot = document.getElementById('cableTypeColorDot');
+            const lenVal = document.getElementById('cableLiveLengthVal');
 
             if (!nodeId) {
+                if (emptyBox) emptyBox.style.display = 'block';
                 if (subgroup) subgroup.style.display = 'none';
                 if (badge) {
                     badge.textContent = 'No Cable';
                     badge.style.background = 'rgba(255,255,255,0.08)';
                     badge.style.color = '#93c5fd';
                 }
-                sel.value = '';
+                if (sel) sel.value = '';
+                if (lenVal) lenVal.textContent = '0.0';
                 activeCable = null;
                 return;
             }
@@ -3150,26 +3604,50 @@ $imageExists = file_exists($imagePath);
 
             if (cable) {
                 activeCable = cable;
-                const targetId = parseInt(cable.from_node_id) === parseInt(nodeId) ? cable.to_node_id : cable.from_node_id;
-                sel.value = targetId;
-                if (subgroup) subgroup.style.display = 'flex';
+                const isFrom = parseInt(cable.from_node_id) === parseInt(nodeId);
+                const otherNodeId = isFrom ? cable.to_node_id : cable.from_node_id;
+                const otherNode = nodes.find(n => parseInt(n.id) === parseInt(otherNodeId));
+                const targetText = otherNode ? `${otherNode.device_id} [${otherNode.type || 'Node'}]` : (isFrom ? (cable.to_device_id || `Node #${otherNodeId}`) : (cable.from_device_id || `Node #${otherNodeId}`));
 
-                document.getElementById('inputCableType').value    = cable.cable_type || 'Cat6 UTP';
-                document.getElementById('inputConduitType').value  = cable.conduit_type || '20mm PVC Conduit';
-                document.getElementById('inputSlackMeters').value  = parseFloat(cable.slack_drop_meters) || 3.0;
-                document.getElementById('inputCableStatus').value  = cable.status || 'Planned';
-                document.getElementById('cableLiveLengthVal').textContent = parseFloat(cable.total_length_meters).toFixed(1);
+                if (emptyBox) emptyBox.style.display = 'none';
+                if (subgroup) subgroup.style.display = 'flex';
+                if (targetNameEl) targetNameEl.textContent = targetText;
+                if (sel) sel.value = otherNodeId;
+
+                const cType = cable.cable_type || 'Cat6 UTP';
+                const cColor = cable.color || getCableColorByType(cType);
+                if (typeDot) typeDot.style.background = cColor;
+
+                const inputCableType = document.getElementById('inputCableType');
+                if (inputCableType) inputCableType.value = cType;
+                const inputConduit = document.getElementById('inputConduitType');
+                if (inputConduit) inputConduit.value = cable.conduit_type || '20mm PVC Conduit';
+                const inputSlack = document.getElementById('inputSlackMeters');
+                if (inputSlack) inputSlack.value = parseFloat(cable.slack_drop_meters) || 3.0;
+                const inputSt = document.getElementById('inputCableStatus');
+                if (inputSt) inputSt.value = cable.status || 'Planned';
+
+                const totalLen = parseFloat(cable.total_length_meters) || 0.0;
+                const slack = parseFloat(cable.slack_drop_meters) || 0.0;
+                const runM = Math.max(0, totalLen - slack);
+
+                if (lenVal) lenVal.textContent = totalLen.toFixed(1);
+
+                if (runSubtextEl) {
+                    runSubtextEl.textContent = `Run: ${runM.toFixed(1)}m + Drop: ${slack.toFixed(1)}m`;
+                }
 
                 if (badge) {
-                    badge.textContent = `${cable.cable_label} · ${cable.total_length_meters}m`;
+                    badge.textContent = `${cable.cable_label} · ${totalLen.toFixed(1)}m`;
                     badge.style.background = '#2563eb';
                     badge.style.color = '#ffffff';
                 }
             } else {
                 activeCable = null;
-                sel.value = '';
+                if (sel) sel.value = '';
+                if (emptyBox) emptyBox.style.display = 'block';
                 if (subgroup) subgroup.style.display = 'none';
-                document.getElementById('cableLiveLengthVal').textContent = '0.0';
+                if (lenVal) lenVal.textContent = '0.0';
                 if (badge) {
                     badge.textContent = 'No Cable';
                     badge.style.background = 'rgba(255,255,255,0.08)';
@@ -3270,6 +3748,15 @@ $imageExists = file_exists($imagePath);
             const lenVal = document.getElementById('cableLiveLengthVal');
             if (lenVal) lenVal.textContent = activeCable.total_length_meters.toFixed(1);
 
+            const runSubtextEl = document.getElementById('cableRunSubtext');
+            if (runSubtextEl) {
+                const runM = Math.max(0, activeCable.total_length_meters - activeCable.slack_drop_meters);
+                runSubtextEl.textContent = `Run: ${runM.toFixed(1)}m + Drop: ${activeCable.slack_drop_meters.toFixed(1)}m`;
+            }
+
+            const typeDot = document.getElementById('cableTypeColorDot');
+            if (typeDot) typeDot.style.background = activeCable.color;
+
             const badge = document.getElementById('cableStatusBadge');
             if (badge) badge.textContent = `${activeCable.cable_label} · ${activeCable.total_length_meters}m`;
 
@@ -3340,15 +3827,39 @@ $imageExists = file_exists($imagePath);
         }
 
         // ── SCALE CALIBRATION ──
+        function updateScaleRatioPreview() {
+            const w = parseFloat(document.getElementById('inputScaleWidth')?.value) || bpRealWidthM;
+            const h = parseFloat(document.getElementById('inputScaleHeight')?.value) || bpRealHeightM;
+            const previewEl = document.getElementById('scaleRatioPreviewText');
+            if (previewEl && w > 0 && h > 0) {
+                const pxPerMeterX = (BP_WIDTH / w).toFixed(1);
+                previewEl.innerHTML = `Floorplan resolution: <strong>${BP_WIDTH}×${BP_HEIGHT}px</strong> · Scale: <strong>1m ≈ ${pxPerMeterX}px</strong>`;
+            }
+
+            // Update active preset button highlight
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                const is30x20 = btn.getAttribute('onclick')?.includes('30, 20') && Math.abs(w - 30) < 0.1 && Math.abs(h - 20) < 0.1;
+                const is60x40 = btn.getAttribute('onclick')?.includes('60, 40') && Math.abs(w - 60) < 0.1 && Math.abs(h - 40) < 0.1;
+                const is120x70 = btn.getAttribute('onclick')?.includes('120, 70') && Math.abs(w - 120) < 0.1 && Math.abs(h - 70) < 0.1;
+                btn.classList.toggle('active', !!(is30x20 || is60x40 || is120x70));
+            });
+        }
+
         function openScaleModal() {
-            document.getElementById('inputScaleWidth').value = bpRealWidthM;
-            document.getElementById('inputScaleHeight').value = bpRealHeightM;
+            const wInput = document.getElementById('inputScaleWidth');
+            const hInput = document.getElementById('inputScaleHeight');
+            if (wInput) wInput.value = bpRealWidthM;
+            if (hInput) hInput.value = bpRealHeightM;
+            updateScaleRatioPreview();
             openModal('scaleCalibrationModal');
         }
 
         function applyScalePreset(w, h) {
-            document.getElementById('inputScaleWidth').value = w;
-            document.getElementById('inputScaleHeight').value = h;
+            const wInput = document.getElementById('inputScaleWidth');
+            const hInput = document.getElementById('inputScaleHeight');
+            if (wInput) wInput.value = w;
+            if (hInput) hInput.value = h;
+            updateScaleRatioPreview();
         }
 
         async function saveScaleCalibration() {
@@ -3403,12 +3914,14 @@ $imageExists = file_exists($imagePath);
             if (!tbody) return;
 
             if (cables.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:30px; color:var(--text-muted);">No structured cable routes created yet. Connect nodes using the Inspector panel.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:36px 16px; color:#6B7280; font-size:0.85rem;"><div style="font-size:1.8rem; margin-bottom:8px;">🔌</div><strong>No structured cable runs created yet.</strong><br><span style="font-size:0.75rem; color:#9CA3AF;">Use the "🔌 Connect Cable" tool on the map or in the Node Inspector to route cables between devices.</span></td></tr>`;
                 document.getElementById('bomTotalMeters').textContent = '0.0 m';
                 document.getElementById('bomTotalRuns').textContent = '0 cable runs';
                 document.getElementById('bomCat6Boxes').textContent = '0 Box';
                 document.getElementById('bomCat6Sub').textContent = '0m installed';
                 document.getElementById('bomOtherCables').textContent = '0.0 m';
+                const otherSub = document.getElementById('bomOtherSub');
+                if (otherSub) otherSub.textContent = 'Specialty conduits';
                 return;
             }
 
